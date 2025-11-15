@@ -366,13 +366,29 @@
   right: 20px;
   background: #935135;
   color: #fff;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  border-radius: 999px;
   border: none;
   cursor: pointer;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 999;
 }
+
+.chat-toggle-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.chat-toggle-label {
+  font-size: 14px;
+}
+
 
 /* RESPONSIVE */
 @media (max-width: 480px) {

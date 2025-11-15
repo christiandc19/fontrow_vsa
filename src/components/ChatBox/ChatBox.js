@@ -506,9 +506,17 @@ const ChatBox = ({ communityName, logoUrl }) => {
     <>
       {!isOpen && (
         <button className="chat-toggle-btn" onClick={handleToggle}>
-          Chat
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt={`${communityName || 'Community'} logo`}
+              className="chat-toggle-logo"
+            />
+          )}
+          <span className="chat-toggle-label">Chat</span>
         </button>
       )}
+
 
       {isOpen && (
         <div className="chatbox-container" role="dialog" aria-label="Chat with us">
