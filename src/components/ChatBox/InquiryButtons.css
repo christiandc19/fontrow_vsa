@@ -1,0 +1,28 @@
+.inquiries-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.inquiry-btn {
+  padding: 12px 15px;
+  background-color: #f0f2f5;
+  color: #333;
+  border: 2px solid #ccc;
+  border-radius: 25px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inquiry-btn:hover {
+  background-color: #0084ff;
+  color: white;
+  transform: translateY(-2px);
+  border-color: #0084ff;
+}
+
+.inquiry-btn:active {
+  transform: translateY(0) scale(0.98);
+}

@@ -1,0 +1,14 @@
+.back-to-menu-btn {
+  background-color: #935135;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 14px;
+}
+
+.back-to-menu-btn:hover {
+  background-color: #7a3d2b;
+}
