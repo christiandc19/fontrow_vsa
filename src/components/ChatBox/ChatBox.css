@@ -19,12 +19,25 @@
 
 /* HEADER */
 .chatbox-header {
-  background: #935135;
-  color: #fff;
+  background: #FCF8EC !important;
+  color: #333 !important;
   padding: 12px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.chatbox-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chatbox-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .chatbox-header-text {
@@ -36,18 +49,20 @@
 .chatbox-title {
   font-size: 16px;
   font-weight: 600;
+  color: #333 !important;
 }
 
 .chatbox-subtitle {
   opacity: 0.9;
   font-size: 12px;
+  color: #333 !important;
 }
 
 .chat-close-btn {
   font-size: 22px;
   background: none;
   border: none;
-  color: #fff;
+  color: #333 !important;
   cursor: pointer;
 }
 
@@ -124,10 +139,12 @@
 }
 
 /* GENERIC FLOW SECTIONS */
-.flow-section {
+.flow-section,
+.schedule-section,
+.pricing-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 /* QUESTIONS */
@@ -159,7 +176,7 @@
   background: #7c402c;
 }
 
-/* BUBBLE GROUPS (for selections / completed steps) */
+/* BUBBLE GROUPS */
 .step-block {
   display: flex;
   flex-direction: column;
@@ -192,11 +209,96 @@
   color: #fff;
 }
 
-/* PRICING SECTION */
-.pricing-section {
+/* SCHEDULE CALENDAR */
+.schedule-calendar {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  padding: 8px 8px 10px;
+}
+
+.calendar-header {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.calendar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.calendar-nav-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #935135;
+}
+
+.calendar-nav-btn:hover {
+  background: rgba(147, 81, 53, 0.08);
+  border-radius: 6px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  font-size: 12px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-weight: 600;
+  color: #666;
+}
+
+.calendar-day {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  border: none;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.calendar-day.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-day:hover:not(.disabled-date):not(.selected-date) {
+  background: rgba(147, 81, 53, 0.08);
+}
+
+.disabled-date {
+  color: #bbb;
+  cursor: default;
+  pointer-events: none;
+}
+
+.selected-date {
+  background: #935135;
+  color: #fff;
+}
+
+.schedule-selected {
+  font-size: 12px;
+  color: #555;
+}
+
+.schedule-selected span {
+  font-weight: 600;
 }
 
 /* FORM */
@@ -210,6 +312,16 @@
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #ccc;
+}
+
+/* ASK US ANYTHING TEXTAREA */
+.ask-textarea {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
 }
 
 /* INITIAL MAIN MENU BUTTONS */

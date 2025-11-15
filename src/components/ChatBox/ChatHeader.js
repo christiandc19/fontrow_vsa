@@ -1,10 +1,16 @@
-import React from 'react';
-
-const ChatHeader = ({ toggleChat }) => (
+const ChatHeader = ({ onClose, communityName, logoUrl }) => (
   <div className="chatbox-header">
-    <h3>Chat</h3>
-    <button onClick={toggleChat} className="close-btn">✕</button>
+    <div className="chatbox-header-left">
+      {logoUrl && (
+        <img src={logoUrl} alt="Community Logo" className="chatbox-logo" />
+      )}
+      <div className="chatbox-header-text">
+        <div className="chatbox-title">Chat with {communityName}</div>
+        <div className="chatbox-subtitle">
+          We’re here to help you explore options.
+        </div>
+      </div>
+    </div>
+    <button className="chat-close-btn" onClick={onClose}>×</button>
   </div>
 );
-
-export default ChatHeader;
