@@ -1,14 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import ChatBox from "./components/ChatBox/ChatBox";
 import "./index.css";
+import App from "./App";
 
-// Expose globally for WordPress
-window.ChatBox = ChatBox;
-window.React = React;
-window.ReactDOM = ReactDOM;
-
-// DO NOT RENDER ANYTHING HERE
-// NO <App /> rendering
-// NO root
-// NO StrictMode
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

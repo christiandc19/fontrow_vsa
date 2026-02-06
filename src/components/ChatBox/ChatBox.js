@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createLead } from "../../services/widgetApi.js";
+
 import './ChatBox.css';
 
 /* ==========================
@@ -459,39 +461,82 @@ const ChatBox = ({ communityName, logoUrl }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmitForm = (e) => {
-    e.preventDefault();
-    setIsSubmittingLead(true);
+const handleSubmitForm = async (e) => {
+  e.preventDefault();
+  setIsSubmittingLead(true);
 
-    setTimeout(() => {
-      let botReply = "";
+  try {
+    // Split full name into first + last (best effort)
+    const [firstName = "", ...rest] = formData.name.trim().split(" ");
+    const lastName = rest.join(" ");
 
-      if (activeMainMenu === "Ask Us Anything") {
-        botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
-      } else {
-        const scheduleText =
-          activeMainMenu === 'Schedule a Visit' &&
-          scheduleSelections.date &&
-          scheduleSelections.time
-            ? ` for a visit on ${formatDateLabel(scheduleSelections.date)} at ${scheduleSelections.time}`
-            : '';
-
-        botReply = `Thank you, ${formData.name}! A team member will reach out soon${scheduleText}.`;
-      }
-
-      setMessages((prev) => [
-        ...prev,
+    // Build lead payload for YOUR backend
+    const leadPayload = {
+      email: formData.email,
+      firstName,
+      lastName,
+      phone: formData.phone,
+      conversations: [
         {
-          id: Date.now(),
-          sender: 'bot',
-          text: botReply,
+          message:
+            activeMainMenu === "Schedule a Visit"
+              ? `User scheduled visit on ${scheduleSelections.date} at ${scheduleSelections.time}`
+              : activeMainMenu === "Pricing"
+              ? `User requested pricing: ${JSON.stringify(pricingSelections)}`
+              : activeMainMenu === "Ask Us Anything"
+              ? `User asked: ${askQuestion}`
+              : `Lead from chatbot (${activeMainMenu || "Main Menu"})`,
         },
-      ]);
+      ],
+    };
 
-      resetAllFlows();
-      setIsSubmittingLead(false);
-    }, 800);
-  };
+    // SEND TO BACKEND ✅
+    await createLead(leadPayload);
+
+    // BOT REPLY (same as before)
+    let botReply = "";
+
+    if (activeMainMenu === "Ask Us Anything") {
+      botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+    } else {
+      const scheduleText =
+        activeMainMenu === "Schedule a Visit" &&
+        scheduleSelections.date &&
+        scheduleSelections.time
+          ? ` for a visit on ${formatDateLabel(
+              scheduleSelections.date
+            )} at ${scheduleSelections.time}`
+          : "";
+
+      botReply = `Thank you, ${formData.name}! A team member will reach out soon${scheduleText}.`;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "bot",
+        text: botReply,
+      },
+    ]);
+
+    resetAllFlows();
+  } catch (err) {
+    console.error("Lead submission failed:", err);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "bot",
+        text:
+          "Sorry, something went wrong submitting your details. Please try again.",
+      },
+    ]);
+  } finally {
+    setIsSubmittingLead(false);
+  }
+};
 
   /* ---------- RESET FLOWS ---------- */
 
