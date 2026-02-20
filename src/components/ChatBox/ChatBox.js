@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createLead } from "../../services/widgetApi.js";
+import { createLead, getUserByIP } from "../../services/widgetApi.js";
 
 import './ChatBox.css';
+
+/* ==========================
+   API BASE
+========================== */
+
+const getApiBase = () => {
+  if (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  return "http://localhost:5297";
+};
+
+const API_BASE = getApiBase();
 
 /* ==========================
    CONFIG
@@ -322,6 +335,8 @@ const ChatBox = ({ communityName, logoUrl }) => {
 
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [foundUserData, setFoundUserData] = useState(null);
+  const [isCheckingIP, setIsCheckingIP] = useState(false);
 
   const [livingSelection, setLivingSelection] = useState(null);
   const [communitySelection, setCommunitySelection] = useState(null);
@@ -348,8 +363,81 @@ const ChatBox = ({ communityName, logoUrl }) => {
     communitySelection,
   ]);
 
+  /* CHECK USER BY IP */
+  const checkUserByIP = async () => {
+    setIsCheckingIP(true);
+    try {
+      const userData = await getUserByIP();
+      if (userData) {
+        // Handle array response - get first user
+        const user = Array.isArray(userData) ? userData[0] : userData;
+        
+        if (user) {
+          setFoundUserData(userData); // Keep original for submission
+          setFormData({
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+            email: user.email || '',
+            phone: user.phone || ''
+          });
+          
+          console.log('Found existing user, saving welcome message:', user);
+          // Save initial welcome message for existing user
+          await saveConversationMessage('How can I help you today?', 'bot', userData);
+        } else {
+          console.log('No existing user found by IP');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user by IP:', error);
+    } finally {
+      setIsCheckingIP(false);
+    }
+  };
+
+  /* SAVE CONVERSATION MESSAGE */
+  const saveConversationMessage = async (message, sender = "user", userDataParam = null) => {
+    const dataToUse = userDataParam || foundUserData;
+    if (!dataToUse) {
+      console.log('No user data available for conversation message');
+      return;
+    }
+    
+    try {
+      // Handle array response - get first user
+      const userData = Array.isArray(dataToUse) ? dataToUse[0] : dataToUse;
+      
+      if (!userData || !userData.id) {
+        console.error('No user data or ID found for conversation message');
+        return;
+      }
+      
+      const conversationPayload = {
+        leadId: userData.id,
+        message: message,
+        sender: sender
+      };
+      
+      console.log('Saving conversation message:', conversationPayload);
+      
+      const response = await fetch(`${API_BASE}/api/Conversations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(conversationPayload),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Conversation message API error:', errorText);
+      } else {
+        console.log('Conversation message saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving conversation message:', error);
+    }
+  };
+
   /* OPEN CHAT */
-  const openChat = () => {
+  const openChat = async () => {
     setIsOpen(true);
     setMessages([
       {
@@ -364,10 +452,14 @@ const ChatBox = ({ communityName, logoUrl }) => {
     setPricingSelections(INITIAL_PRICING);
     setScheduleSelections(INITIAL_SCHEDULE);
     setFormData(INITIAL_FORM);
+    setFoundUserData(null);
     setLivingSelection(null);
     setCommunitySelection(null);
     setAskQuestion("");
     setHasTypedQuestion(false);
+    
+    // Check for existing user by IP and save welcome message if user exists
+    await checkUserByIP();
   };
 
   const closeChat = () => setIsOpen(false);
@@ -377,6 +469,9 @@ const ChatBox = ({ communityName, logoUrl }) => {
   /* MAIN MENU SELECT */
   const handleMainMenuSelect = (option) => {
     setActiveMainMenu(option);
+
+    // Save user message for main menu selection if user exists
+    saveConversationMessage(option, 'user');
 
     if (option !== 'Pricing') setPricingSelections(INITIAL_PRICING);
     if (option !== 'Schedule a Visit') setScheduleSelections(INITIAL_SCHEDULE);
@@ -399,6 +494,9 @@ const ChatBox = ({ communityName, logoUrl }) => {
   };
 
   const handleBackToMainMenu = () => {
+    // Save user action for back to main menu
+    saveConversationMessage('Back to Main Menu', 'user');
+    
     setActiveMainMenu(null);
     setPricingSelections(INITIAL_PRICING);
     setScheduleSelections(INITIAL_SCHEDULE);
@@ -411,18 +509,25 @@ const ChatBox = ({ communityName, logoUrl }) => {
 
   /* ---------- PRICING SELECTORS ---------- */
 
-  const handleSelectPricingLivingOption = (option) =>
+  const handleSelectPricingLivingOption = (option) => {
+    saveConversationMessage(`Pricing - Living Option: ${option}`, 'user');
     setPricingSelections((prev) => ({ ...prev, livingOption: option }));
+  };
 
-  const handleSelectWhoIsThisFor = (option) =>
+  const handleSelectWhoIsThisFor = (option) => {
+    saveConversationMessage(`Pricing - Who is this for: ${option}`, 'user');
     setPricingSelections((prev) => ({ ...prev, whoIsThisFor: option }));
+  };
 
-  const handleSelectTimeline = (option) =>
+  const handleSelectTimeline = (option) => {
+    saveConversationMessage(`Pricing - Timeline: ${option}`, 'user');
     setPricingSelections((prev) => ({ ...prev, timeline: option }));
+  };
 
   /* ---------- COMMUNITY LIFE ---------- */
 
   const handleCommunitySelect = (option) => {
+    saveConversationMessage(`Community Life - ${option}`, 'user');
     const url = COMMUNITY_LIFE_LINKS[option];
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
     setCommunitySelection(null);
@@ -431,6 +536,7 @@ const ChatBox = ({ communityName, logoUrl }) => {
   /* ---------- LIVING OPTIONS ---------- */
 
   const handleLivingOptionSelect = (option) => {
+    saveConversationMessage(`Living Options - ${option}`, 'user');
     const url = LIVING_OPTION_LINKS[option];
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
     setLivingSelection(null);
@@ -451,6 +557,7 @@ const ChatBox = ({ communityName, logoUrl }) => {
   const handleAskQuestionSubmit = (e) => {
     e.preventDefault();
     if (!askQuestion.trim()) return;
+    saveConversationMessage(`Ask Us Anything - Question: ${askQuestion}`, 'user');
     setHasTypedQuestion(true);
   };
 
@@ -462,7 +569,7 @@ const ChatBox = ({ communityName, logoUrl }) => {
   };
 
 const handleSubmitForm = async (e) => {
-  e.preventDefault();
+  if (e) e.preventDefault();
   setIsSubmittingLead(true);
 
   try {
@@ -470,32 +577,70 @@ const handleSubmitForm = async (e) => {
     const [firstName = "", ...rest] = formData.name.trim().split(" ");
     const lastName = rest.join(" ");
 
-    // Build lead payload for YOUR backend
-    const leadPayload = {
-      email: formData.email,
-      firstName,
-      lastName,
-      phone: formData.phone,
-      conversations: [
-        {
-          message:
-            activeMainMenu === "Schedule a Visit"
-              ? `User scheduled visit on ${scheduleSelections.date} at ${scheduleSelections.time}`
-              : activeMainMenu === "Pricing"
-              ? `User requested pricing: ${JSON.stringify(pricingSelections)}`
-              : activeMainMenu === "Ask Us Anything"
-              ? `User asked: ${askQuestion}`
-              : `Lead from chatbot (${activeMainMenu || "Main Menu"})`,
-        },
-      ],
-    };
+    // Build conversation message
+    let conversationMessage = "";
+    if (activeMainMenu === "Schedule a Visit") {
+      conversationMessage = `User scheduled visit on ${scheduleSelections.date} at ${scheduleSelections.time}`;
+    } else if (activeMainMenu === "Pricing") {
+      conversationMessage = `User requested pricing: ${JSON.stringify(pricingSelections)}`;
+    } else if (activeMainMenu === "Ask Us Anything") {
+      conversationMessage = `User asked: ${askQuestion}`;
+    } else {
+      conversationMessage = `Lead from chatbot (${activeMainMenu || "Main Menu"})`;
+    }
 
-    // SEND TO BACKEND ✅
-    await createLead(leadPayload);
+    if (foundUserData) {
+      // Handle array response - get first user
+      const userData = Array.isArray(foundUserData) ? foundUserData[0] : foundUserData;
+      
+      if (!userData) {
+        throw new Error('No user data found in response');
+      }
+      
+      const leadId = userData.id;
+      
+      if (!leadId) {
+        console.error('No lead ID found in userData:', userData);
+        throw new Error('Lead ID not found in user data');
+      }
+      
+      const conversationPayload = {
+        leadId: leadId,
+        message: conversationMessage,
+        sender: "user"
+      };
+      
+      const response = await fetch(`${API_BASE}/api/Conversations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(conversationPayload),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Conversation API error:', errorText);
+        throw new Error(`Failed to save conversation: ${errorText}`);
+      }
+    } else {
+      // New user - create lead with details and conversation
+      const leadPayload = {
+        email: formData.email,
+        firstName,
+        lastName,
+        phone: formData.phone,
+        conversations: [
+          {
+            message: conversationMessage,
+            sender: "user"
+          },
+        ],
+      };
 
-    // BOT REPLY (same as before)
+      await createLead(leadPayload);
+    }
+
+    // BOT REPLY
     let botReply = "";
-
     if (activeMainMenu === "Ask Us Anything") {
       botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
     } else {
@@ -522,7 +667,7 @@ const handleSubmitForm = async (e) => {
 
     resetAllFlows();
   } catch (err) {
-    console.error("Lead submission failed:", err);
+    console.error("Submission failed:", err);
 
     setMessages((prev) => [
       ...prev,
@@ -530,7 +675,7 @@ const handleSubmitForm = async (e) => {
         id: Date.now(),
         sender: "bot",
         text:
-          "Sorry, something went wrong submitting your details. Please try again.",
+          "Sorry, something went wrong. Please try again.",
       },
     ]);
   } finally {
@@ -544,7 +689,10 @@ const handleSubmitForm = async (e) => {
     setActiveMainMenu(null);
     setPricingSelections(INITIAL_PRICING);
     setScheduleSelections(INITIAL_SCHEDULE);
-    setFormData(INITIAL_FORM);
+    // Don't reset form data if we have found user data
+    if (!foundUserData) {
+      setFormData(INITIAL_FORM);
+    }
     setLivingSelection(null);
     setCommunitySelection(null);
     setAskQuestion("");
@@ -566,12 +714,18 @@ const handleSubmitForm = async (e) => {
     pricingSelections.whoIsThisFor &&
     pricingSelections.timeline;
 
-  const showPricingForm = showPricingSection && pricingHasAll;
+  const showPricingForm = showPricingSection && pricingHasAll && !foundUserData;
+  const showPricingSubmit = showPricingSection && pricingHasAll && foundUserData;
 
   const scheduleHasDate = !!scheduleSelections.date;
   const scheduleHasTime = !!scheduleSelections.time;
+  const scheduleHasBoth = scheduleHasDate && scheduleHasTime;
 
-  const showScheduleForm = showScheduleSection && scheduleHasDate && scheduleHasTime;
+  const showScheduleForm = showScheduleSection && scheduleHasBoth && !foundUserData;
+  const showScheduleSubmit = showScheduleSection && scheduleHasBoth && foundUserData;
+
+  const showAskSubmit = showAskSection && hasTypedQuestion && foundUserData;
+  const showAskForm = showAskSection && hasTypedQuestion && !foundUserData;
 
   /* ==========================
       RENDER
@@ -716,6 +870,24 @@ const handleSubmitForm = async (e) => {
                     </div>
                   )}
 
+                  {/* Step 4 — Returning User Submit */}
+                  {showPricingSubmit && (
+                    <div className="step-block">
+                      <div className="step-question">
+                        Welcome back! We'll send pricing info to your email.
+                      </div>
+
+                      <div className="existing-user-info">
+                        <p><strong>Name:</strong> {formData.name}</p>
+                        <p><strong>Email:</strong> {formData.email}</p>
+                        <p><strong>Phone:</strong> {formData.phone}</p>
+                        <button className="cta-btn" onClick={handleSubmitForm} disabled={isSubmittingLead}>
+                          {isSubmittingLead ? 'Sending…' : 'Send Pricing Info'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
 
@@ -801,6 +973,24 @@ const handleSubmitForm = async (e) => {
                     </div>
                   )}
 
+                  {/* Step 3 — Returning User Submit */}
+                  {showScheduleSubmit && (
+                    <div className="step-block">
+                      <div className="step-question">
+                        Welcome back! We'll confirm your visit for {formatDateLabel(scheduleSelections.date)} at {scheduleSelections.time}.
+                      </div>
+
+                      <div className="existing-user-info">
+                        <p><strong>Name:</strong> {formData.name}</p>
+                        <p><strong>Email:</strong> {formData.email}</p>
+                        <p><strong>Phone:</strong> {formData.phone}</p>
+                        <button className="cta-btn" onClick={handleSubmitForm} disabled={isSubmittingLead}>
+                          {isSubmittingLead ? 'Sending…' : 'Confirm Visit'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
 
@@ -869,7 +1059,7 @@ const handleSubmitForm = async (e) => {
                         <button className="cta-btn" type="submit">Continue</button>
                       </form>
                     </>
-                  ) : (
+                  ) : showAskForm ? (
                     <>
                       <div className="step-question">
                         Thanks! Please share your contact details so we can follow up.
@@ -908,7 +1098,22 @@ const handleSubmitForm = async (e) => {
                         </button>
                       </form>
                     </>
-                  )}
+                  ) : showAskSubmit ? (
+                    <>
+                      <div className="step-question">
+                        Thanks! We'll follow up with you about your question.
+                      </div>
+
+                      <div className="existing-user-info">
+                        <p><strong>Name:</strong> {formData.name}</p>
+                        <p><strong>Email:</strong> {formData.email}</p>
+                        <p><strong>Phone:</strong> {formData.phone}</p>
+                        <button className="cta-btn" onClick={handleSubmitForm} disabled={isSubmittingLead}>
+                          {isSubmittingLead ? "Sending…" : "Submit Question"}
+                        </button>
+                      </div>
+                    </>
+                  ) : null}
 
                 </div>
               )}
