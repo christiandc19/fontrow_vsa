@@ -400,3 +400,28 @@
     border-radius: 16px 16px 0 0;
   }
 }
+
+/* EXISTING USER INFO DISPLAY */
+.existing-user-info {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.existing-user-info p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.existing-user-info strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.existing-user-info .cta-btn {
+  margin-top: 12px;
+  width: 100%;
+}
