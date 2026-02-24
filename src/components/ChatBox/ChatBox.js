@@ -681,10 +681,39 @@ const handleSubmitForm = async (e) => {
         // Clear pending conversations since user is now registered
         setPendingConversations([]);
         console.log('User registered successfully, switched to existing user mode');
+        
+        // BOT REPLY for new user (UI only - not saved to database)
+        let botReply = "";
+        if (activeMainMenu === "Ask Us Anything") {
+          botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+        } else {
+          const scheduleText =
+            activeMainMenu === "Schedule a Visit" &&
+            scheduleSelections.date &&
+            scheduleSelections.time
+              ? ` for a visit on ${formatDateLabel(
+                  scheduleSelections.date
+                )} at ${scheduleSelections.time}`
+              : "";
+
+          botReply = `Thank you, ${formData.name}! A team member will reach out soon${scheduleText}.`;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            sender: "bot",
+            text: botReply,
+          },
+        ]);
+        
+        resetAllFlows();
+        return; // Exit early since we handled the new user case
       }
     }
 
-    // BOT REPLY
+    // BOT REPLY for existing user
     let botReply = "";
     if (activeMainMenu === "Ask Us Anything") {
       botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
@@ -710,6 +739,9 @@ const handleSubmitForm = async (e) => {
       },
     ]);
 
+    // Save bot reply to conversation history for existing user
+    await saveConversationMessage(botReply, 'bot');
+
     resetAllFlows();
   } catch (err) {
     console.error("Submission failed:", err);
@@ -723,6 +755,8 @@ const handleSubmitForm = async (e) => {
           "Sorry, something went wrong. Please try again.",
       },
     ]);
+    
+    // Don't save error messages to database
   } finally {
     setIsSubmittingLead(false);
   }
