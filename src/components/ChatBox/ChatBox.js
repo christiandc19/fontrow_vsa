@@ -343,6 +343,7 @@ const ChatBox = ({ communityName, logoUrl }) => {
 
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
+  const [pendingConversations, setPendingConversations] = useState([]);
 
   const scrollRef = useRef(null);
 
@@ -364,7 +365,7 @@ const ChatBox = ({ communityName, logoUrl }) => {
   ]);
 
   /* CHECK USER BY IP */
-  const checkUserByIP = async () => {
+  const checkUserByIP = async (updateFormData = true) => {
     setIsCheckingIP(true);
     try {
       const userData = await getUserByIP();
@@ -374,21 +375,29 @@ const ChatBox = ({ communityName, logoUrl }) => {
         
         if (user) {
           setFoundUserData(userData); // Keep original for submission
-          setFormData({
-            name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-            email: user.email || '',
-            phone: user.phone || ''
-          });
+          
+          // Only update form data if explicitly requested (e.g., on initial chat open)
+          if (updateFormData) {
+            setFormData({
+              name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+              email: user.email || '',
+              phone: user.phone || ''
+            });
+          }
           
           console.log('Found existing user, saving welcome message:', user);
           // Save initial welcome message for existing user
           await saveConversationMessage('How can I help you today?', 'bot', userData);
+          return userData;
         } else {
           console.log('No existing user found by IP');
+          return null;
         }
       }
+      return null;
     } catch (error) {
       console.error('Error checking user by IP:', error);
+      return null;
     } finally {
       setIsCheckingIP(false);
     }
@@ -398,7 +407,13 @@ const ChatBox = ({ communityName, logoUrl }) => {
   const saveConversationMessage = async (message, sender = "user", userDataParam = null) => {
     const dataToUse = userDataParam || foundUserData;
     if (!dataToUse) {
-      console.log('No user data available for conversation message');
+      console.log('No user data available, storing conversation locally');
+      // Store conversation locally for new users
+      setPendingConversations(prev => [...prev, {
+        message: message,
+        sender: sender,
+        timestamp: new Date().toISOString()
+      }]);
       return;
     }
     
@@ -451,15 +466,30 @@ const ChatBox = ({ communityName, logoUrl }) => {
     setActiveMainMenu(null);
     setPricingSelections(INITIAL_PRICING);
     setScheduleSelections(INITIAL_SCHEDULE);
-    setFormData(INITIAL_FORM);
-    setFoundUserData(null);
     setLivingSelection(null);
     setCommunitySelection(null);
     setAskQuestion("");
     setHasTypedQuestion(false);
     
-    // Check for existing user by IP and save welcome message if user exists
-    await checkUserByIP();
+    // Always check for existing user by IP when opening chat
+    // This ensures that users who submitted info in the current session
+    // are now treated as existing users
+    const userData = await checkUserByIP(true);
+    
+    if (userData) {
+      // Existing user - keep their form data and clear pending conversations
+      setFoundUserData(userData);
+      setPendingConversations([]);
+    } else {
+      // New user - reset form data and initialize pending conversations
+      setFormData(INITIAL_FORM);
+      setFoundUserData(null);
+      setPendingConversations([{
+        message: 'How can I help you today?',
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      }]);
+    }
   };
 
   const closeChat = () => setIsOpen(false);
@@ -622,21 +652,36 @@ const handleSubmitForm = async (e) => {
         throw new Error(`Failed to save conversation: ${errorText}`);
       }
     } else {
-      // New user - create lead with details and conversation
+      // New user - create lead with details and all pending conversations
+      const allConversations = [
+        ...pendingConversations,
+        {
+          message: conversationMessage,
+          sender: "user",
+          timestamp: new Date().toISOString()
+        }
+      ];
+      
       const leadPayload = {
         email: formData.email,
         firstName,
         lastName,
         phone: formData.phone,
-        conversations: [
-          {
-            message: conversationMessage,
-            sender: "user"
-          },
-        ],
+        conversations: allConversations,
       };
 
       await createLead(leadPayload);
+      
+      // After creating new lead, check IP again to get the newly created user data
+      // so subsequent interactions will be treated as existing user
+      // Don't update form data since user just submitted it
+      const newUserData = await checkUserByIP(false);
+      if (newUserData) {
+        setFoundUserData(newUserData);
+        // Clear pending conversations since user is now registered
+        setPendingConversations([]);
+        console.log('User registered successfully, switched to existing user mode');
+      }
     }
 
     // BOT REPLY
@@ -697,6 +742,7 @@ const handleSubmitForm = async (e) => {
     setCommunitySelection(null);
     setAskQuestion("");
     setHasTypedQuestion(false);
+    setPendingConversations([]);
   };
 
   /* ---------- ACTIVE STATES ---------- */
