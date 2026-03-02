@@ -8,19 +8,26 @@ const fontrowConfig = {
   headerSubtitle: "Web design, development, and ongoing support.",
   welcomeMessage: "What can we help you with today?",
 
-  mainMenu: [
-    { id: "web", label: "Web Development", type: "link", url: "https://fontrow.com" },
-    { id: "maintenance", label: "Website Maintenance", type: "link", url: "https://fontrow.com" },
-    { id: "social", label: "Social Media Management", type: "link", url: "https://fontrow.com" },
-    { id: "ask", label: "Ask a Question", type: "flow" },
-  ],
-
-  ask: {
-    q1: "Tell us what you need help with:",
-    placeholder: "Ex: website redesign, new landing page, SEO, social media, etc.",
-    contactPrompt: "Drop your contact info and we’ll reach out shortly.",
-    returningButton: "Send Message",
-  },
+mainMenu: [
+  { id: "projects", label: "View Our Projects", type: "link", url: "https://fontrow.com/portfolio" },
+  { id: "schedule", label: "Book A Call", type: "flow" },
+  { id: "contact", label: "Contact Us", type: "link", url: "https://fontrow.com/contact" },
+  { id: "ask", label: "Ask Us A Question", type: "flow" },
+],
+schedule: {
+  intro: "Pick a date and time and we’ll confirm a quick call.",
+  q1: "What day works best?",
+  q2: "What time works best?",
+  contactPrompt: "Share your contact details and we’ll confirm the call.",
+  returningButton: "Confirm Call",
+  timeSlots: ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM"],
+},
+ask: {
+  q1: "What can we help you with?",
+  placeholder: "Ex: new website, redesign, SEO, maintenance, social media…",
+  contactPrompt: "Drop your contact info and we’ll reach out shortly.",
+  returningButton: "Send Message",
+},
 };
 
 export default fontrowConfig;
