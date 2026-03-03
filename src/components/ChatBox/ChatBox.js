@@ -484,6 +484,97 @@ export default function ChatBox({ config }) {
         conversationMessage = `Question: ${askQuestion}`;
       } else {
         conversationMessage = `Lead from chatbot (${activeFlowId || "main_menu"})`;
+    if (foundUserData) {
+      // Handle array response - get first user
+      const userData = Array.isArray(foundUserData) ? foundUserData[0] : foundUserData;
+      
+      if (!userData) {
+        throw new Error('No user data found in response');
+      }
+      
+      const leadId = userData.id;
+      
+      if (!leadId) {
+        console.error('No lead ID found in userData:', userData);
+        throw new Error('Lead ID not found in user data');
+      }
+      
+      const conversationPayload = {
+        leadId: leadId,
+        message: conversationMessage,
+        sender: "user"
+      };
+      
+      const response = await fetch(`${API_BASE}/api/Conversations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(conversationPayload),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Conversation API error:', errorText);
+        throw new Error(`Failed to save conversation: ${errorText}`);
+      }
+    } else {
+      // New user - create lead with details and all pending conversations
+      const allConversations = [
+        ...pendingConversations,
+        {
+          message: conversationMessage,
+          sender: "user",
+          timestamp: new Date().toISOString()
+        }
+      ];
+      
+      const leadPayload = {
+        email: formData.email,
+        firstName,
+        lastName,
+        phone: formData.phone,
+        conversations: allConversations,
+      };
+
+      await createLead(leadPayload);
+      
+      // After creating new lead, check IP again to get the newly created user data
+      // so subsequent interactions will be treated as existing user
+      // Don't update form data since user just submitted it
+      const newUserData = await checkUserByIP(false);
+      if (newUserData) {
+        setFoundUserData(newUserData);
+        // Clear pending conversations since user is now registered
+        setPendingConversations([]);
+        console.log('User registered successfully, switched to existing user mode');
+        
+        // BOT REPLY for new user (UI only - not saved to database)
+        let botReply = "";
+        if (activeMainMenu === "Ask Us Anything") {
+          botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+        } else {
+          const scheduleText =
+            activeMainMenu === "Schedule a Visit" &&
+            scheduleSelections.date &&
+            scheduleSelections.time
+              ? ` for a visit on ${formatDateLabel(
+                  scheduleSelections.date
+                )} at ${scheduleSelections.time}`
+              : "";
+
+          botReply = `Thank you, ${formData.name}! A team member will reach out soon${scheduleText}.`;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            sender: "bot",
+            text: botReply,
+          },
+        ]);
+        
+        resetAllFlows();
+        return; // Exit early since we handled the new user case
       }
 
       if (foundUserData) {
@@ -491,6 +582,54 @@ export default function ChatBox({ config }) {
         if (!userData?.id) throw new Error("Lead ID not found for returning user.");
 
         const payload = { leadId: userData.id, message: conversationMessage, sender: "user" };
+    // BOT REPLY for existing user
+    let botReply = "";
+    if (activeMainMenu === "Ask Us Anything") {
+      botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+    } else {
+      const scheduleText =
+        activeMainMenu === "Schedule a Visit" &&
+        scheduleSelections.date &&
+        scheduleSelections.time
+          ? ` for a visit on ${formatDateLabel(
+              scheduleSelections.date
+            )} at ${scheduleSelections.time}`
+          : "";
+
+      botReply = `Thank you, ${formData.name}! A team member will reach out soon${scheduleText}.`;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "bot",
+        text: botReply,
+      },
+    ]);
+
+    // Save bot reply to conversation history for existing user
+    await saveConversationMessage(botReply, 'bot');
+
+    resetAllFlows();
+  } catch (err) {
+    console.error("Submission failed:", err);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "bot",
+        text:
+          "Sorry, something went wrong. Please try again.",
+      },
+    ]);
+    
+    // Don't save error messages to database
+  } finally {
+    setIsSubmittingLead(false);
+  }
+};
 
         const res = await fetch(`${API_BASE}/api/Conversations`, {
           method: "POST",
