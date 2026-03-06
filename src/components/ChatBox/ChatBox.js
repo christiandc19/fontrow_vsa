@@ -1,127 +1,50 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import { createLead, getUserByIP } from "../../services/widgetApi.js";
-
-import './ChatBox.css';
+import "./ChatBox.css";
 
 /* ==========================
    API BASE
 ========================== */
-
 const getApiBase = () => {
   if (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
   return "http://localhost:5297";
 };
-
 const API_BASE = getApiBase();
-
-/* ==========================
-   CONFIG
-========================== */
-
-const MAIN_MENU_OPTIONS = [
-  'Schedule a Visit',
-  'Living Options',
-  'Community Life',
-  'View Floor Plans',
-  'Pricing',
-  'Job Inquiry',
-  'Ask Us Anything',
-];
-
-/* ---------- LIVING OPTIONS ---------- */
-
-const LIVING_OPTIONS_CTAS = [
-  'Assisted Living',
-  'Memory Support',
-  'Skilled Nursing',
-  'Short Term Rehab',
-  'Respite Care',
-];
-
-const LIVING_OPTION_LINKS = {
-  'Assisted Living': 'https://norwoodcrossing.christiancareallen.org/assisted-living/',
-  'Memory Support': 'https://norwoodcrossing.christiancareallen.org/memory-support/',
-  'Skilled Nursing': 'https://norwoodcrossing.christiancareallen.org/skilled-care/',
-  'Short Term Rehab': 'https://norwoodcrossing.christiancareallen.org/short-term-rehab/',
-  'Respite Care': 'https://norwoodcrossing.christiancareallen.org/respite-care/',
-};
-
-/* ---------- COMMUNITY LIFE ---------- */
-
-const COMMUNITY_LIFE_CTAS = ['About', 'Amenities', 'History', 'Events'];
-
-const COMMUNITY_LIFE_LINKS = {
-  About: 'https://norwoodcrossing.christiancareallen.org/about/',
-  Amenities: 'https://norwoodcrossing.christiancareallen.org/amenities-services/',
-  History: 'https://norwoodcrossing.christiancareallen.org/history/',
-  Events: 'https://norwoodcrossing.christiancareallen.org/amenities-services/',
-};
-
-/* ---------- PRICING ---------- */
-
-const PRICING_LIVING_OPTIONS_CTAS = [
-  'Independent Living',
-  'Assisted Living',
-  'Memory Support',
-  'Skilled Nursing',
-  'Not Sure',
-  'Other',
-];
-
-const WHO_IS_THIS_FOR_CTAS = ['Myself', 'Parent', 'Spouse', 'Relative', 'Friend', 'Other'];
-const TIMELINE_CTAS = ['Immediately', '1 to 3 Months', '3 Months +', 'Just Researching'];
-
-/* ---------- SCHEDULE ---------- */
-
-const SCHEDULE_TIME_SLOTS = [
-  '9:00 AM',
-  '10:00 AM',
-  '11:00 AM',
-  '1:00 PM',
-  '2:00 PM',
-  '3:00 PM',
-];
-
-/* ---------- OTHER LINKS ---------- */
-
-const LINKS = {
-  floorPlans: 'https://norwoodcrossing.christiancareallen.org/floor-plans/',
-  jobInquiry: 'https://norwoodcrossing.christiancareallen.org/careers/',
-};
-
-/* ---------- INITIAL STATES ---------- */
-
-const INITIAL_FORM = { name: '', email: '', phone: '' };
-const INITIAL_PRICING = { livingOption: null, whoIsThisFor: null, timeline: null };
-const INITIAL_SCHEDULE = { date: null, time: null };
 
 /* ==========================
    HELPERS
 ========================== */
-
 const formatDateLabel = (iso) => {
-  if (!iso) return '';
+  if (!iso) return "";
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+
+const monthNames = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+const weekdayShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+const toISODate = (date) => {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  const d = `${date.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${d}`;
 };
 
 /* ==========================
-   COMPONENTS
+   UI COMPONENTS
 ========================== */
-
-const ChatHeader = ({ onClose, communityName, logoUrl }) => (
+const ChatHeader = ({ onClose, title, subtitle, logoUrl }) => (
   <div className="chatbox-header">
     <div className="chatbox-header-left">
-      {logoUrl && <img src={logoUrl} alt="Community Logo" className="chatbox-logo" />}
+      {logoUrl && <img src={logoUrl} alt="Logo" className="chatbox-logo" />}
       <div className="chatbox-header-text">
-        <div className="chatbox-title">Chat with {communityName}</div>
-        <div className="chatbox-subtitle">We’re here to help you explore options.</div>
+        <div className="chatbox-title">{title}</div>
+        <div className="chatbox-subtitle">{subtitle}</div>
       </div>
     </div>
     <button className="chat-close-btn" onClick={onClose}>×</button>
@@ -131,35 +54,34 @@ const ChatHeader = ({ onClose, communityName, logoUrl }) => (
 const ChatMessages = ({ messages }) => (
   <div className="chat-messages">
     {messages.map((msg) => (
-      <div key={msg.id} className={`chat-message ${msg.sender} ${msg.isWelcome ? 'welcome' : ''}`}>
+      <div key={msg.id} className={`chat-message ${msg.sender} ${msg.isWelcome ? "welcome" : ""}`}>
         {msg.text}
       </div>
     ))}
   </div>
 );
 
-/* MAIN MENU BUBBLES */
-const MainMenuBubbleNav = ({ active, onSelect }) => (
+const MainMenuBubbleNav = ({ items, activeId, onSelect }) => (
   <div className="mainmenu-bubble-nav">
-    {MAIN_MENU_OPTIONS.map((option) => (
+    {items.map((item) => (
       <button
-        key={option}
-        className={`nav-bubble ${active === option ? 'active' : ''}`}
-        onClick={() => onSelect(option)}
+        key={item.id}
+        className={`nav-bubble ${activeId === item.id ? "active" : ""}`}
+        onClick={() => onSelect(item)}
       >
-        {option}
+        {item.label}
       </button>
     ))}
   </div>
 );
 
-const MainMenuButtons = ({ visible, onClick }) => {
+const MainMenuButtons = ({ items, visible, onSelect }) => {
   if (!visible) return null;
   return (
     <div className="chatbox-ctas">
-      {MAIN_MENU_OPTIONS.map((option) => (
-        <button key={option} className="cta-btn" onClick={() => onClick(option)}>
-          {option}
+      {items.map((item) => (
+        <button key={item.id} className="cta-btn" onClick={() => onSelect(item)}>
+          {item.label}
         </button>
       ))}
     </div>
@@ -183,7 +105,7 @@ const BubbleStep = ({ question, options, selected, onSelect }) => (
       {options.map((option) => (
         <button
           key={option}
-          className={`bubble ${selected === option ? 'selected' : ''}`}
+          className={`bubble ${selected === option ? "selected" : ""}`}
           onClick={() => onSelect(option)}
         >
           {option}
@@ -192,24 +114,6 @@ const BubbleStep = ({ question, options, selected, onSelect }) => (
     </div>
   </div>
 );
-
-/* ==========================
-   SCHEDULE CALENDAR
-========================== */
-
-const monthNames = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December'
-];
-
-const weekdayShort = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
-const toISODate = (date) => {
-  const y = date.getFullYear();
-  const m = `${date.getMonth() + 1}`.padStart(2, '0');
-  const d = `${date.getDate()}`.padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
 
 const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
   const today = new Date();
@@ -233,22 +137,17 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
     return test < today;
   };
 
-  const handleClick = (day) => {
-    if (!day) return;
-    if (isDisabled(viewYear, viewMonth, day)) return;
-
-    const date = new Date(viewYear, viewMonth, day);
-    onSelectDate(toISODate(date));
-  };
-
   const isSelected = (year, month, day) => {
     if (!selectedDate) return false;
     const d = new Date(selectedDate);
-    return (
-      d.getFullYear() === year &&
-      d.getMonth() === month &&
-      d.getDate() === day
-    );
+    return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+  };
+
+  const handleClick = (day) => {
+    if (!day) return;
+    if (isDisabled(viewYear, viewMonth, day)) return;
+    const date = new Date(viewYear, viewMonth, day);
+    onSelectDate(toISODate(date));
   };
 
   return (
@@ -295,9 +194,7 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
         ))}
 
         {cells.map((day, idx) => {
-
-          if (day === null)
-            return <div key={idx} className="calendar-day empty"></div>;
+          if (day === null) return <div key={idx} className="calendar-day empty" />;
 
           const disabled = isDisabled(viewYear, viewMonth, day);
           const selected = isSelected(viewYear, viewMonth, day);
@@ -305,9 +202,7 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
           return (
             <button
               key={idx}
-              className={`calendar-day ${disabled ? 'disabled-date' : ''} ${
-                selected ? 'selected-date' : ''
-              }`}
+              className={`calendar-day ${disabled ? "disabled-date" : ""} ${selected ? "selected-date" : ""}`}
               disabled={disabled}
               onClick={() => handleClick(day)}
             >
@@ -321,50 +216,72 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
 };
 
 /* ==========================
-   MAIN CHATBOX LOGIC
+   MAIN CHATBOX
 ========================== */
+export default function ChatBox({ config }) {
+  // Config (safe defaults)
+  const clientKey = config?.clientKey || "default";
+  const logoUrl = config?.logoUrl || null;
+  const headerTitle = config?.headerTitle || `Chat with ${config?.communityName || ""}`.trim() || "Chat with us";
+  const headerSubtitle = config?.headerSubtitle || "We’re here to help you explore options.";
+  const welcomeMessage = config?.welcomeMessage || "How can I help you today?";
 
-const ChatBox = ({ communityName, logoUrl }) => {
+  const mainMenu = Array.isArray(config?.mainMenu) ? config.mainMenu : [];
+
+  const services = Array.isArray(config?.services) ? config.services : [];
+  const projects = Array.isArray(config?.projects) ? config.projects : [];
+
+  const quoteCfg = config?.quote || {};
+  const scheduleCfg = config?.schedule || {};
+  const askCfg = config?.ask || {};
+
+  const QUOTE_PROJECT_TYPES = quoteCfg.projectTypes || [];
+  const QUOTE_CLIENT_TYPES = quoteCfg.clientTypes || [];
+  const QUOTE_TIMELINES = quoteCfg.timelines || [];
+
+  const CALL_TIME_SLOTS = scheduleCfg.timeSlots || ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM"];
+
+  // UI
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [activeFlowId, setActiveFlowId] = useState(null);
 
-  const [activeMainMenu, setActiveMainMenu] = useState(null);
-
-  const [pricingSelections, setPricingSelections] = useState(INITIAL_PRICING);
-  const [scheduleSelections, setScheduleSelections] = useState(INITIAL_SCHEDULE);
-
-  const [formData, setFormData] = useState(INITIAL_FORM);
-  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  // Lead state
   const [foundUserData, setFoundUserData] = useState(null);
   const [isCheckingIP, setIsCheckingIP] = useState(false);
 
-  const [livingSelection, setLivingSelection] = useState(null);
-  const [communitySelection, setCommunitySelection] = useState(null);
+  // Form state
+  const INITIAL_FORM = { name: "", email: "", phone: "" };
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
+  // Quote flow
+  const INITIAL_QUOTE = { projectType: null, clientType: null, timeline: null };
+  const [quoteSelections, setQuoteSelections] = useState(INITIAL_QUOTE);
+
+  // Schedule flow
+  const INITIAL_CALL = { date: null, time: null };
+  const [callSelections, setCallSelections] = useState(INITIAL_CALL);
+
+  // Ask flow
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
+  const [pendingConversations, setPendingConversations] = useState([]);
 
+  // Scroll
   const scrollRef = useRef(null);
-
-  /* AUTO SCROLL */
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }, [
-    messages,
-    activeMainMenu,
-    pricingSelections,
-    scheduleSelections,
-    livingSelection,
-    communitySelection,
-  ]);
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, activeFlowId, quoteSelections, callSelections, hasTypedQuestion]);
+
+  const openLink = (url) => {
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   /* CHECK USER BY IP */
-  const checkUserByIP = async () => {
+  const checkUserByIP = async (updateFormData = true) => {
     setIsCheckingIP(true);
     try {
       const userData = await getUserByIP();
@@ -373,726 +290,556 @@ const ChatBox = ({ communityName, logoUrl }) => {
         const user = Array.isArray(userData) ? userData[0] : userData;
         
         if (user) {
-          setFoundUserData(userData); // Keep original for submission
-          setFormData({
-            name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-            email: user.email || '',
-            phone: user.phone || ''
-          });
+          setFoundUserData(user); // Use the extracted user object, not the array
           
-          console.log('Found existing user, saving welcome message:', user);
-          // Save initial welcome message for existing user
-          await saveConversationMessage('How can I help you today?', 'bot', userData);
+          // Only update form data if explicitly requested (e.g., on initial chat open)
+          if (updateFormData) {
+            setFormData({
+              name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+              email: user.email || '',
+              phone: user.phone || ''
+            });
+          }
+          
+          console.log('Found existing user:', user);
+          return user; // Return the user object, not the array
         } else {
           console.log('No existing user found by IP');
+          return null;
         }
       }
+      return null;
     } catch (error) {
       console.error('Error checking user by IP:', error);
+      return null;
     } finally {
       setIsCheckingIP(false);
     }
   };
 
-  /* SAVE CONVERSATION MESSAGE */
+  /* ---------- SAVE CONVERSATION MESSAGE ---------- */
   const saveConversationMessage = async (message, sender = "user", userDataParam = null) => {
     const dataToUse = userDataParam || foundUserData;
     if (!dataToUse) {
-      console.log('No user data available for conversation message');
+      console.log('No user data available, storing conversation locally');
+      // Store conversation locally for new users
+      setPendingConversations(prev => [...prev, {
+        message: message,
+        sender: sender,
+        timestamp: new Date().toISOString()
+      }]);
       return;
     }
     
     try {
-      // Handle array response - get first user
-      const userData = Array.isArray(dataToUse) ? dataToUse[0] : dataToUse;
-      
-      if (!userData || !userData.id) {
-        console.error('No user data or ID found for conversation message');
-        return;
-      }
-      
-      const conversationPayload = {
-        leadId: userData.id,
-        message: message,
-        sender: sender
-      };
-      
-      console.log('Saving conversation message:', conversationPayload);
-      
-      const response = await fetch(`${API_BASE}/api/Conversations`, {
+      const userData = dataToUse;
+      if (!userData?.id) return;
+
+      const payload = { leadId: userData.id, message, sender };
+
+      const res = await fetch(`${API_BASE}/api/Conversations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(conversationPayload),
+        body: JSON.stringify(payload),
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Conversation message API error:', errorText);
-      } else {
-        console.log('Conversation message saved successfully');
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Conversation API error:", errorText);
       }
-    } catch (error) {
-      console.error('Error saving conversation message:', error);
+    } catch (err) {
+      console.error("Error saving conversation message:", err);
     }
   };
 
-  /* OPEN CHAT */
+
+
+  /* ---------- OPEN CHAT ---------- */
   const openChat = async () => {
     setIsOpen(true);
-    setMessages([
-      {
-        id: 'welcome',
-        sender: 'bot',
-        text: 'How can I help you today?',
-        isWelcome: true,
-      },
-    ]);
+    setMessages([{ id: "welcome", sender: "bot", text: welcomeMessage, isWelcome: true }]);
 
-    setActiveMainMenu(null);
-    setPricingSelections(INITIAL_PRICING);
-    setScheduleSelections(INITIAL_SCHEDULE);
-    setFormData(INITIAL_FORM);
-    setFoundUserData(null);
-    setLivingSelection(null);
-    setCommunitySelection(null);
+    // reset flows
+    setActiveFlowId(null);
+    setQuoteSelections(INITIAL_QUOTE);
+    setCallSelections(INITIAL_CALL);
     setAskQuestion("");
     setHasTypedQuestion(false);
+
+    // reset lead state
+    setFoundUserData(null);
+    setPendingConversations([]); // Reset pending conversations
+
+    const userData = await checkUserByIP();
     
-    // Check for existing user by IP and save welcome message if user exists
-    await checkUserByIP();
+    // If no existing user found, reset form data
+    if (!userData) {
+      setFormData(INITIAL_FORM);
+    }
+    
+    // Always save the welcome message as the first conversation
+    await saveConversationMessage(welcomeMessage, 'bot', userData);
   };
 
   const closeChat = () => setIsOpen(false);
-
   const handleToggle = () => (isOpen ? closeChat() : openChat());
 
-  /* MAIN MENU SELECT */
-  const handleMainMenuSelect = (option) => {
-    setActiveMainMenu(option);
+  /* ---------- MAIN MENU SELECT ---------- */
+  const handleMainMenuSelect = (item) => {
+    // item: { id, label, type: "flow"|"link", url? }
+    saveConversationMessage(item.label, "user");
 
-    // Save user message for main menu selection if user exists
-    saveConversationMessage(option, 'user');
+    if (item.type === "link") {
+      openLink(item.url);
+      return;
+    }
 
-    if (option !== 'Pricing') setPricingSelections(INITIAL_PRICING);
-    if (option !== 'Schedule a Visit') setScheduleSelections(INITIAL_SCHEDULE);
-    if (option !== 'Living Options') setLivingSelection(null);
-    if (option !== 'Community Life') setCommunitySelection(null);
-    if (option !== 'Ask Us Anything') {
+    setActiveFlowId(item.id);
+
+    // reset per flow
+    if (item.id !== "quote") setQuoteSelections(INITIAL_QUOTE);
+    if (item.id !== "schedule") setCallSelections(INITIAL_CALL);
+    if (item.id !== "ask") {
       setAskQuestion("");
       setHasTypedQuestion(false);
     }
 
-    if (option === 'View Floor Plans') {
-      window.open(LINKS.floorPlans, '_blank');
-      return;
-    }
-
-    if (option === 'Job Inquiry') {
-      window.open(LINKS.jobInquiry, '_blank');
-      return;
+    // Ensure existing user data is maintained when switching flows
+    if (foundUserData && formData.name === "") {
+      setFormData({
+        name: `${foundUserData.firstName || ''} ${foundUserData.lastName || ''}`.trim(),
+        email: foundUserData.email || '',
+        phone: foundUserData.phone || ''
+      });
     }
   };
 
   const handleBackToMainMenu = () => {
-    // Save user action for back to main menu
-    saveConversationMessage('Back to Main Menu', 'user');
-    
-    setActiveMainMenu(null);
-    setPricingSelections(INITIAL_PRICING);
-    setScheduleSelections(INITIAL_SCHEDULE);
-    setFormData(INITIAL_FORM);
-    setLivingSelection(null);
-    setCommunitySelection(null);
+    saveConversationMessage("Back to Main Menu", "user");
+    setActiveFlowId(null);
+    setQuoteSelections(INITIAL_QUOTE);
+    setCallSelections(INITIAL_CALL);
     setAskQuestion("");
     setHasTypedQuestion(false);
+
+    // Ensure existing user data is maintained when going back to main menu
+    if (foundUserData && formData.name === "") {
+      setFormData({
+        name: `${foundUserData.firstName || ''} ${foundUserData.lastName || ''}`.trim(),
+        email: foundUserData.email || '',
+        phone: foundUserData.phone || ''
+      });
+    }
   };
 
-  /* ---------- PRICING SELECTORS ---------- */
-
-  const handleSelectPricingLivingOption = (option) => {
-    saveConversationMessage(`Pricing - Living Option: ${option}`, 'user');
-    setPricingSelections((prev) => ({ ...prev, livingOption: option }));
+  /* ---------- SERVICES / PROJECTS ---------- */
+  const handleServiceSelect = (label) => {
+    const svc = services.find((s) => s.label === label);
+    if (!svc) return;
+    saveConversationMessage(`Service: ${svc.label}`, "user");
+    openLink(svc.url);
   };
 
-  const handleSelectWhoIsThisFor = (option) => {
-    saveConversationMessage(`Pricing - Who is this for: ${option}`, 'user');
-    setPricingSelections((prev) => ({ ...prev, whoIsThisFor: option }));
+  const handleProjectSelect = (label) => {
+    const p = projects.find((x) => x.label === label);
+    if (!p) return;
+    saveConversationMessage(`Industry: ${p.label}`, "user");
+    openLink(p.url);
   };
 
+  /* ---------- QUOTE ---------- */
+  const handleSelectProjectType = (option) => {
+    saveConversationMessage(`Quote - Project Type: ${option}`, "user");
+    setQuoteSelections((prev) => ({ ...prev, projectType: option }));
+  };
+  const handleSelectClientType = (option) => {
+    saveConversationMessage(`Quote - Client Type: ${option}`, "user");
+    setQuoteSelections((prev) => ({ ...prev, clientType: option }));
+  };
   const handleSelectTimeline = (option) => {
-    saveConversationMessage(`Pricing - Timeline: ${option}`, 'user');
-    setPricingSelections((prev) => ({ ...prev, timeline: option }));
-  };
-
-  /* ---------- COMMUNITY LIFE ---------- */
-
-  const handleCommunitySelect = (option) => {
-    saveConversationMessage(`Community Life - ${option}`, 'user');
-    const url = COMMUNITY_LIFE_LINKS[option];
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    setCommunitySelection(null);
-  };
-
-  /* ---------- LIVING OPTIONS ---------- */
-
-  const handleLivingOptionSelect = (option) => {
-    saveConversationMessage(`Living Options - ${option}`, 'user');
-    const url = LIVING_OPTION_LINKS[option];
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    setLivingSelection(null);
+    saveConversationMessage(`Quote - Timeline: ${option}`, "user");
+    setQuoteSelections((prev) => ({ ...prev, timeline: option }));
   };
 
   /* ---------- SCHEDULE ---------- */
-
-  const handleSelectScheduleDate = (isoDate) => {
-    setScheduleSelections((prev) => ({ ...prev, date: isoDate }));
+  const handleSelectCallDate = (isoDate) => {
+    saveConversationMessage(`Call - Date: ${isoDate}`, "user");
+    setCallSelections((prev) => ({ ...prev, date: isoDate }));
+  };
+  const handleSelectCallTime = (time) => {
+    saveConversationMessage(`Call - Time: ${time}`, "user");
+    setCallSelections((prev) => ({ ...prev, time }));
   };
 
-  const handleSelectScheduleTime = (time) => {
-    setScheduleSelections((prev) => ({ ...prev, time }));
-  };
-
-  /* ---------- ASK US ANYTHING ---------- */
-
+  /* ---------- ASK ---------- */
   const handleAskQuestionSubmit = (e) => {
     e.preventDefault();
     if (!askQuestion.trim()) return;
-    saveConversationMessage(`Ask Us Anything - Question: ${askQuestion}`, 'user');
     setHasTypedQuestion(true);
   };
 
   /* ---------- FORM ---------- */
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSubmitForm = async (e) => {
-  if (e) e.preventDefault();
-  setIsSubmittingLead(true);
-
-  try {
-    // Split full name into first + last (best effort)
-    const [firstName = "", ...rest] = formData.name.trim().split(" ");
-    const lastName = rest.join(" ");
-
-    // Build conversation message
-    let conversationMessage = "";
-    if (activeMainMenu === "Schedule a Visit") {
-      conversationMessage = `User scheduled visit on ${scheduleSelections.date} at ${scheduleSelections.time}`;
-    } else if (activeMainMenu === "Pricing") {
-      conversationMessage = `User requested pricing: ${JSON.stringify(pricingSelections)}`;
-    } else if (activeMainMenu === "Ask Us Anything") {
-      conversationMessage = `User asked: ${askQuestion}`;
-    } else {
-      conversationMessage = `Lead from chatbot (${activeMainMenu || "Main Menu"})`;
-    }
-
-    if (foundUserData) {
-      // Handle array response - get first user
-      const userData = Array.isArray(foundUserData) ? foundUserData[0] : foundUserData;
-      
-      if (!userData) {
-        throw new Error('No user data found in response');
-      }
-      
-      const leadId = userData.id;
-      
-      if (!leadId) {
-        console.error('No lead ID found in userData:', userData);
-        throw new Error('Lead ID not found in user data');
-      }
-      
-      const conversationPayload = {
-        leadId: leadId,
-        message: conversationMessage,
-        sender: "user"
-      };
-      
-      const response = await fetch(`${API_BASE}/api/Conversations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(conversationPayload),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Conversation API error:', errorText);
-        throw new Error(`Failed to save conversation: ${errorText}`);
-      }
-    } else {
-      // New user - create lead with details and conversation
-      const leadPayload = {
-        email: formData.email,
-        firstName,
-        lastName,
-        phone: formData.phone,
-        conversations: [
-          {
-            message: conversationMessage,
-            sender: "user"
-          },
-        ],
-      };
-
-      await createLead(leadPayload);
-    }
-
-    // BOT REPLY
-    let botReply = "";
-    if (activeMainMenu === "Ask Us Anything") {
-      botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
-    } else {
-      const scheduleText =
-        activeMainMenu === "Schedule a Visit" &&
-        scheduleSelections.date &&
-        scheduleSelections.time
-          ? ` for a visit on ${formatDateLabel(
-              scheduleSelections.date
-            )} at ${scheduleSelections.time}`
-          : "";
-
-      botReply = `Thank you, ${formData.name}! A team member will reach out soon${scheduleText}.`;
-    }
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        sender: "bot",
-        text: botReply,
-      },
-    ]);
-
-    resetAllFlows();
-  } catch (err) {
-    console.error("Submission failed:", err);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        sender: "bot",
-        text:
-          "Sorry, something went wrong. Please try again.",
-      },
-    ]);
-  } finally {
-    setIsSubmittingLead(false);
-  }
-};
-
-  /* ---------- RESET FLOWS ---------- */
-
   const resetAllFlows = () => {
-    setActiveMainMenu(null);
-    setPricingSelections(INITIAL_PRICING);
-    setScheduleSelections(INITIAL_SCHEDULE);
-    // Don't reset form data if we have found user data
-    if (!foundUserData) {
-      setFormData(INITIAL_FORM);
-    }
-    setLivingSelection(null);
-    setCommunitySelection(null);
+    setActiveFlowId(null);
+    setQuoteSelections(INITIAL_QUOTE);
+    setCallSelections(INITIAL_CALL);
     setAskQuestion("");
     setHasTypedQuestion(false);
+    
+    // Only reset form data if no existing user or if form is already empty
+    if (!foundUserData) {
+      setFormData(INITIAL_FORM);
+    } else {
+      // Ensure existing user form data is properly populated
+      setFormData({
+        name: `${foundUserData.firstName || ''} ${foundUserData.lastName || ''}`.trim(),
+        email: foundUserData.email || '',
+        phone: foundUserData.phone || ''
+      });
+    }
+  };
+
+  const handleSubmitForm = async (e) => {
+    if (e) e.preventDefault();
+    setIsSubmittingLead(true);
+
+    try {
+      let conversationMessage = "";
+      if (activeFlowId === "quote") {
+        conversationMessage = `Quote Request: ${JSON.stringify(quoteSelections)}`;
+      } else if (activeFlowId === "schedule") {
+        conversationMessage = `Call Request: ${callSelections.date} ${callSelections.time}`;
+      } else if (activeFlowId === "ask") {
+        conversationMessage = `Question: ${askQuestion}`;
+      } else {
+        conversationMessage = `Lead from chatbot (${activeFlowId || "main_menu"})`;
+      }
+
+      let newUserData = null;
+
+      if (foundUserData) {
+        // foundUserData is now always a user object, not an array
+        const userData = foundUserData;
+        
+        if (!userData) {
+          throw new Error('No user data found in response');
+        }
+        
+        const leadId = userData.id;
+        
+        if (!leadId) {
+          console.error('No lead ID found in userData:', userData);
+          throw new Error('Lead ID not found in user data');
+        }
+        
+        const conversationPayload = {
+          leadId: leadId,
+          message: conversationMessage,
+          sender: "user"
+        };
+        
+        const response = await fetch(`${API_BASE}/api/Conversations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(conversationPayload),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Conversation API error:', errorText);
+          throw new Error(`Failed to save conversation: ${errorText}`);
+        }
+      } else {
+        // New user - create lead with details and all pending conversations
+        const [firstName = "", ...rest] = formData.name.trim().split(" ");
+        const lastName = rest.join(" ");
+        
+        const leadPayload = {
+          clientKey,
+          email: formData.email,
+          firstName,
+          lastName,
+          phone: formData.phone,
+          meta: { flow: activeFlowId, quoteSelections, callSelections },
+          conversations: [
+            ...pendingConversations,
+            { message: conversationMessage, sender: "user" }
+          ],
+        };
+
+        await createLead(leadPayload);
+        
+        // After creating new lead, check IP again to get the newly created user data
+        newUserData = await checkUserByIP(true);
+        if (newUserData) {
+          setFoundUserData(newUserData);
+          setPendingConversations([]);
+          console.log('User registered successfully, switched to existing user mode');
+        }
+      }
+
+      let botReply = "";
+      if (activeFlowId === "ask") {
+        botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+      } else if (activeFlowId === "schedule" && callSelections.date && callSelections.time) {
+        botReply = `Thank you, ${formData.name}! We'll confirm your call on ${formatDateLabel(callSelections.date)} at ${callSelections.time}.`;
+      } else {
+        botReply = `Thank you, ${formData.name}! A team member will reach out soon.`;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          sender: "bot",
+          text: botReply,
+        },
+      ]);
+
+      // Save bot reply - use newUserData for new users, foundUserData for existing users
+      const userDataForSaving = newUserData || foundUserData;
+      await saveConversationMessage(botReply, 'bot', userDataForSaving);
+      resetAllFlows();
+    } catch (err) {
+      console.error("Submission failed:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          sender: "bot",
+          text: "Sorry, something went wrong. Please try again.",
+        },
+      ]);
+    } finally {
+      setIsSubmittingLead(false);
+    }
   };
 
   /* ---------- ACTIVE STATES ---------- */
+  const showMainMenuButtons = !activeFlowId;
 
-  const showMainMenuButtons = !activeMainMenu;
+  const showServicesSection = activeFlowId === "services";
+  const showProjectsSection = activeFlowId === "projects";
+  const showQuoteSection = activeFlowId === "quote";
+  const showScheduleSection = activeFlowId === "schedule";
+  const showAskSection = activeFlowId === "ask";
 
-  const showPricingSection = activeMainMenu === 'Pricing';
-  const showLivingSection = activeMainMenu === 'Living Options';
-  const showCommunitySection = activeMainMenu === 'Community Life';
-  const showScheduleSection = activeMainMenu === 'Schedule a Visit';
-  const showAskSection = activeMainMenu === 'Ask Us Anything';
+  const quoteHasAll = !!(quoteSelections.projectType && quoteSelections.clientType && quoteSelections.timeline);
+  const callHasBoth = !!(callSelections.date && callSelections.time);
 
-  const pricingHasAll =
-    pricingSelections.livingOption &&
-    pricingSelections.whoIsThisFor &&
-    pricingSelections.timeline;
+  const showQuoteForm = showQuoteSection && quoteHasAll && !foundUserData;
+  const showQuoteSubmit = showQuoteSection && quoteHasAll && !!foundUserData;
 
-  const showPricingForm = showPricingSection && pricingHasAll && !foundUserData;
-  const showPricingSubmit = showPricingSection && pricingHasAll && foundUserData;
+  const showScheduleForm = showScheduleSection && callHasBoth && !foundUserData;
+  const showScheduleSubmit = showScheduleSection && callHasBoth && !!foundUserData;
 
-  const scheduleHasDate = !!scheduleSelections.date;
-  const scheduleHasTime = !!scheduleSelections.time;
-  const scheduleHasBoth = scheduleHasDate && scheduleHasTime;
-
-  const showScheduleForm = showScheduleSection && scheduleHasBoth && !foundUserData;
-  const showScheduleSubmit = showScheduleSection && scheduleHasBoth && foundUserData;
-
-  const showAskSubmit = showAskSection && hasTypedQuestion && foundUserData;
   const showAskForm = showAskSection && hasTypedQuestion && !foundUserData;
+  const showAskSubmit = showAskSection && hasTypedQuestion && !!foundUserData;
 
   /* ==========================
-      RENDER
-  ========================== */
-
+     RENDER
+========================== */
   return (
     <>
       {!isOpen && (
         <button className="chat-toggle-btn" onClick={handleToggle}>
-          {logoUrl && (
-            <img
-              src={logoUrl}
-              alt={`${communityName || 'Community'} logo`}
-              className="chat-toggle-logo"
-            />
-          )}
+          {logoUrl && <img src={logoUrl} alt="Logo" className="chat-toggle-logo" />}
           <span className="chat-toggle-label">Chat</span>
         </button>
       )}
 
       {isOpen && (
         <div className="chatbox-container" role="dialog" aria-label="Chat with us">
-          <ChatHeader 
+          <ChatHeader
             onClose={handleToggle}
-            communityName={communityName}
+            title={headerTitle}
+            subtitle={headerSubtitle}
             logoUrl={logoUrl}
           />
 
           <div className="chatbox-main" ref={scrollRef}>
             <div className="chat-scroll-stack">
-
-              {/* Chat messages */}
               <ChatMessages messages={messages} />
 
-              {/* Bubble Nav */}
-              {activeMainMenu && (
-                <MainMenuBubbleNav
-                  active={activeMainMenu}
-                  onSelect={handleMainMenuSelect}
-                />
+              {isCheckingIP && (
+                <div className="chat-message bot">Checking your info…</div>
               )}
 
-              {/* ========= PRICING ========= */}
-              {showPricingSection && (
-                <div className="pricing-section">
+              {activeFlowId && (
+                <MainMenuBubbleNav items={mainMenu} activeId={activeFlowId} onSelect={handleMainMenuSelect} />
+              )}
 
-                  {/* Step 1 */}
+              {/* ========= SERVICES ========= */}
+              {showServicesSection && (
+                <div className="flow-section">
+                  <div className="step-question">{config?.servicesTitle || "Please select a service:"}</div>
+                  <StepCTAs options={services.map((s) => s.label)} onSelect={handleServiceSelect} />
+                </div>
+              )}
+
+              {/* ========= PROJECTS ========= */}
+              {showProjectsSection && (
+                <div className="flow-section">
+                  <div className="step-question">{config?.projectsTitle || "Select a project category:"}</div>
+                  <StepCTAs options={projects.map((p) => p.label)} onSelect={handleProjectSelect} />
+                </div>
+              )}
+
+              {/* ========= QUOTE ========= */}
+              {showQuoteSection && (
+                <div className="pricing-section">
+                  {quoteCfg.intro && <div className="step-question">{quoteCfg.intro}</div>}
+
                   <div className="step-block">
-                    <div className="step-question">What living option are you interested in?</div>
-                    {pricingSelections.livingOption === null ? (
-                      <StepCTAs
-                        options={PRICING_LIVING_OPTIONS_CTAS}
-                        onSelect={handleSelectPricingLivingOption}
-                      />
+                    <div className="step-question">{quoteCfg.q1 || "What type of project is this?"}</div>
+                    {quoteSelections.projectType === null ? (
+                      <StepCTAs options={QUOTE_PROJECT_TYPES} onSelect={handleSelectProjectType} />
                     ) : (
-                      <BubbleStep
-                        options={PRICING_LIVING_OPTIONS_CTAS}
-                        selected={pricingSelections.livingOption}
-                        onSelect={handleSelectPricingLivingOption}
-                      />
+                      <BubbleStep options={QUOTE_PROJECT_TYPES} selected={quoteSelections.projectType} onSelect={handleSelectProjectType} />
                     )}
                   </div>
 
-                  {/* Step 2 */}
-                  {pricingSelections.livingOption && (
+                  {quoteSelections.projectType && (
                     <div className="step-block">
-                      <div className="step-question">Who is this for?</div>
-                      {pricingSelections.whoIsThisFor === null ? (
-                        <StepCTAs
-                          options={WHO_IS_THIS_FOR_CTAS}
-                          onSelect={handleSelectWhoIsThisFor}
-                        />
+                      <div className="step-question">{quoteCfg.q2 || "Who are you?"}</div>
+                      {quoteSelections.clientType === null ? (
+                        <StepCTAs options={QUOTE_CLIENT_TYPES} onSelect={handleSelectClientType} />
                       ) : (
-                        <BubbleStep
-                          options={WHO_IS_THIS_FOR_CTAS}
-                          selected={pricingSelections.whoIsThisFor}
-                          onSelect={handleSelectWhoIsThisFor}
-                        />
+                        <BubbleStep options={QUOTE_CLIENT_TYPES} selected={quoteSelections.clientType} onSelect={handleSelectClientType} />
                       )}
                     </div>
                   )}
 
-                  {/* Step 3 */}
-                  {pricingSelections.livingOption &&
-                    pricingSelections.whoIsThisFor && (
-                      <div className="step-block">
-                        <div className="step-question">What is your timeline?</div>
-                        {pricingSelections.timeline === null ? (
-                          <StepCTAs
-                            options={TIMELINE_CTAS}
-                            onSelect={handleSelectTimeline}
-                          />
-                        ) : (
-                          <BubbleStep
-                            options={TIMELINE_CTAS}
-                            selected={pricingSelections.timeline}
-                            onSelect={handleSelectTimeline}
-                          />
-                        )}
-                      </div>
-                    )}
-
-                  {/* Step 4 — Contact Form */}
-                  {showPricingForm && (
+                  {quoteSelections.projectType && quoteSelections.clientType && (
                     <div className="step-block">
-                      <div className="step-question">
-                        Please provide your contact details so we can share pricing info.
-                      </div>
+                      <div className="step-question">{quoteCfg.q3 || "What is your timeline?"}</div>
+                      {quoteSelections.timeline === null ? (
+                        <StepCTAs options={QUOTE_TIMELINES} onSelect={handleSelectTimeline} />
+                      ) : (
+                        <BubbleStep options={QUOTE_TIMELINES} selected={quoteSelections.timeline} onSelect={handleSelectTimeline} />
+                      )}
+                    </div>
+                  )}
 
+                  {showQuoteForm && (
+                    <div className="step-block">
+                      <div className="step-question">{quoteCfg.contactPrompt || "Please provide your contact details so we can follow up."}</div>
                       <form className="chat-form" onSubmit={handleSubmitForm}>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleFormChange}
-                          placeholder="First & Last Name"
-                          required
-                        />
-
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleFormChange}
-                          placeholder="Email"
-                          required
-                        />
-
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleFormChange}
-                          placeholder="Phone"
-                          required
-                        />
-
+                        <input name="name" value={formData.name} onChange={handleFormChange} placeholder="First & Last Name" required />
+                        <input type="email" name="email" value={formData.email} onChange={handleFormChange} placeholder="Email" required />
+                        <input type="tel" name="phone" value={formData.phone} onChange={handleFormChange} placeholder="Phone" required />
                         <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-                          {isSubmittingLead ? 'Sending…' : 'Submit'}
+                          {isSubmittingLead ? "Sending…" : "Submit"}
                         </button>
                       </form>
                     </div>
                   )}
 
-                  {/* Step 4 — Returning User Submit */}
-                  {showPricingSubmit && (
+                  {showQuoteSubmit && (
                     <div className="step-block">
-                      <div className="step-question">
-                        Welcome back! We'll send pricing info to your email.
-                      </div>
-
+                      <div className="step-question">{quoteCfg.returningPrompt || "Welcome back! We’ll follow up with your quote request."}</div>
                       <div className="existing-user-info">
                         <p><strong>Name:</strong> {formData.name}</p>
                         <p><strong>Email:</strong> {formData.email}</p>
                         <p><strong>Phone:</strong> {formData.phone}</p>
                         <button className="cta-btn" onClick={handleSubmitForm} disabled={isSubmittingLead}>
-                          {isSubmittingLead ? 'Sending…' : 'Send Pricing Info'}
+                          {isSubmittingLead ? "Sending…" : (quoteCfg.returningButton || "Submit Request")}
                         </button>
                       </div>
                     </div>
                   )}
-
                 </div>
               )}
 
-              {/* ========= SCHEDULE A VISIT ========= */}
+              {/* ========= SCHEDULE ========= */}
               {showScheduleSection && (
                 <div className="schedule-section">
+                  {scheduleCfg.intro && <div className="step-question">{scheduleCfg.intro}</div>}
 
-                  {/* Step 1 — Calendar */}
                   <div className="step-block">
-                    <div className="step-question">What date would you like to schedule a visit?</div>
-
-                    <ScheduleCalendar
-                      selectedDate={scheduleSelections.date}
-                      onSelectDate={handleSelectScheduleDate}
-                    />
-
-                    {scheduleHasDate && (
+                    <div className="step-question">{scheduleCfg.q1 || "What date would you like to schedule a call?"}</div>
+                    <ScheduleCalendar selectedDate={callSelections.date} onSelectDate={handleSelectCallDate} />
+                    {callSelections.date && (
                       <div className="schedule-selected">
-                        Selected date: <span>{formatDateLabel(scheduleSelections.date)}</span>
+                        Selected date: <span>{formatDateLabel(callSelections.date)}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Step 2 — Time selection */}
-                  {scheduleHasDate && (
+                  {callSelections.date && (
                     <div className="step-block">
-                      <div className="step-question">What time works best for you?</div>
-
-                      {!scheduleHasTime ? (
-                        <StepCTAs
-                          options={SCHEDULE_TIME_SLOTS}
-                          onSelect={handleSelectScheduleTime}
-                        />
+                      <div className="step-question">{scheduleCfg.q2 || "What time works best for you?"}</div>
+                      {!callSelections.time ? (
+                        <StepCTAs options={CALL_TIME_SLOTS} onSelect={handleSelectCallTime} />
                       ) : (
-                        <BubbleStep
-                          options={SCHEDULE_TIME_SLOTS}
-                          selected={scheduleSelections.time}
-                          onSelect={handleSelectScheduleTime}
-                        />
+                        <BubbleStep options={CALL_TIME_SLOTS} selected={callSelections.time} onSelect={handleSelectCallTime} />
                       )}
                     </div>
                   )}
 
-                  {/* Step 3 — Contact form */}
                   {showScheduleForm && (
                     <div className="step-block">
-                      <div className="step-question">
-                        Please share your contact details and we’ll confirm your visit.
-                      </div>
-
+                      <div className="step-question">{scheduleCfg.contactPrompt || "Please share your contact details and we’ll confirm your call."}</div>
                       <form className="chat-form" onSubmit={handleSubmitForm}>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleFormChange}
-                          placeholder="First & Last Name"
-                          required
-                        />
-
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleFormChange}
-                          placeholder="Email"
-                          required
-                        />
-
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleFormChange}
-                          placeholder="Phone"
-                          required
-                        />
-
+                        <input name="name" value={formData.name} onChange={handleFormChange} placeholder="First & Last Name" required />
+                        <input type="email" name="email" value={formData.email} onChange={handleFormChange} placeholder="Email" required />
+                        <input type="tel" name="phone" value={formData.phone} onChange={handleFormChange} placeholder="Phone" required />
                         <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-                          {isSubmittingLead ? 'Sending…' : 'Submit'}
+                          {isSubmittingLead ? "Sending…" : "Submit"}
                         </button>
                       </form>
                     </div>
                   )}
 
-                  {/* Step 3 — Returning User Submit */}
                   {showScheduleSubmit && (
                     <div className="step-block">
                       <div className="step-question">
-                        Welcome back! We'll confirm your visit for {formatDateLabel(scheduleSelections.date)} at {scheduleSelections.time}.
+                        {scheduleCfg.returningPrompt ||
+                          `Welcome back! We'll confirm your call on ${formatDateLabel(callSelections.date)} at ${callSelections.time}.`}
                       </div>
-
                       <div className="existing-user-info">
                         <p><strong>Name:</strong> {formData.name}</p>
                         <p><strong>Email:</strong> {formData.email}</p>
                         <p><strong>Phone:</strong> {formData.phone}</p>
                         <button className="cta-btn" onClick={handleSubmitForm} disabled={isSubmittingLead}>
-                          {isSubmittingLead ? 'Sending…' : 'Confirm Visit'}
+                          {isSubmittingLead ? "Sending…" : (scheduleCfg.returningButton || "Confirm Call")}
                         </button>
                       </div>
                     </div>
                   )}
-
                 </div>
               )}
 
-              {/* ========= LIVING OPTIONS ========= */}
-              {showLivingSection && (
-                <div className="flow-section">
-                  <div className="step-question">Please select a living option:</div>
-
-                  {livingSelection === null ? (
-                    <StepCTAs
-                      options={LIVING_OPTIONS_CTAS}
-                      onSelect={handleLivingOptionSelect}
-                    />
-                  ) : (
-                    <BubbleStep
-                      question="Please select a living option:"
-                      options={LIVING_OPTIONS_CTAS}
-                      selected={livingSelection}
-                      onSelect={handleLivingOptionSelect}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* ========= COMMUNITY LIFE ========= */}
-              {showCommunitySection && (
-                <div className="flow-section">
-                  <div className="step-question">
-                    What would you like to learn about Community Life?
-                  </div>
-
-                  {communitySelection === null ? (
-                    <StepCTAs
-                      options={COMMUNITY_LIFE_CTAS}
-                      onSelect={handleCommunitySelect}
-                    />
-                  ) : (
-                    <BubbleStep
-                      question="What would you like to learn about Community Life?"
-                      options={COMMUNITY_LIFE_CTAS}
-                      selected={communitySelection}
-                      onSelect={handleCommunitySelect}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* ========= ASK US ANYTHING ========= */}
+              {/* ========= ASK ========= */}
               {showAskSection && (
                 <div className="flow-section">
-
                   {!hasTypedQuestion ? (
                     <>
-                      <div className="step-question">What question do you have?</div>
-
+                      <div className="step-question">{askCfg.q1 || "What question do you have?"}</div>
                       <form className="chat-form" onSubmit={handleAskQuestionSubmit}>
                         <textarea
                           className="ask-textarea"
                           value={askQuestion}
                           onChange={(e) => setAskQuestion(e.target.value)}
-                          placeholder="Type your question here..."
+                          placeholder={askCfg.placeholder || "Type your question here..."}
                           required
                           rows="3"
-                        ></textarea>
-
+                        />
                         <button className="cta-btn" type="submit">Continue</button>
                       </form>
                     </>
                   ) : showAskForm ? (
                     <>
-                      <div className="step-question">
-                        Thanks! Please share your contact details so we can follow up.
-                      </div>
-
+                      <div className="step-question">{askCfg.contactPrompt || "Please share your contact details so we can follow up."}</div>
                       <form className="chat-form" onSubmit={handleSubmitForm}>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleFormChange}
-                          placeholder="First & Last Name"
-                          required
-                        />
-
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleFormChange}
-                          placeholder="Email"
-                          required
-                        />
-
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleFormChange}
-                          placeholder="Phone"
-                          required
-                        />
-
+                        <input name="name" value={formData.name} onChange={handleFormChange} placeholder="First & Last Name" required />
+                        <input type="email" name="email" value={formData.email} onChange={handleFormChange} placeholder="Email" required />
+                        <input type="tel" name="phone" value={formData.phone} onChange={handleFormChange} placeholder="Phone" required />
                         <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
                           {isSubmittingLead ? "Sending…" : "Submit"}
                         </button>
@@ -1100,37 +847,25 @@ const handleSubmitForm = async (e) => {
                     </>
                   ) : showAskSubmit ? (
                     <>
-                      <div className="step-question">
-                        Thanks! We'll follow up with you about your question.
-                      </div>
-
+                      <div className="step-question">{askCfg.returningPrompt || "Thanks! We’ll follow up with you about your question."}</div>
                       <div className="existing-user-info">
                         <p><strong>Name:</strong> {formData.name}</p>
                         <p><strong>Email:</strong> {formData.email}</p>
                         <p><strong>Phone:</strong> {formData.phone}</p>
                         <button className="cta-btn" onClick={handleSubmitForm} disabled={isSubmittingLead}>
-                          {isSubmittingLead ? "Sending…" : "Submit Question"}
+                          {isSubmittingLead ? "Sending…" : (askCfg.returningButton || "Submit Question")}
                         </button>
                       </div>
                     </>
                   ) : null}
-
                 </div>
               )}
-
             </div>
           </div>
 
-          {/* MAIN MENU BUTTONS */}
-          {showMainMenuButtons && (
-            <MainMenuButtons
-              visible={showMainMenuButtons}
-              onClick={handleMainMenuSelect}
-            />
-          )}
+          <MainMenuButtons items={mainMenu} visible={showMainMenuButtons} onSelect={handleMainMenuSelect} />
 
-          {/* BACK BUTTON */}
-          {activeMainMenu && (
+          {activeFlowId && (
             <button className="back-menu-btn" onClick={handleBackToMainMenu}>
               Back to Main Menu
             </button>
@@ -1139,6 +874,4 @@ const handleSubmitForm = async (e) => {
       )}
     </>
   );
-};
-
-export default ChatBox;
+}
