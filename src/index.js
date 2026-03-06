@@ -17,15 +17,19 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import ChatBox from "./components/ChatBox/ChatBox";
 import "./index.css";
- 
+
 window.FontRowChatbot = function (config = {}) {
-  const container = document.createElement("div");
-  container.id = "fontrow-chatbot-root";
-  document.body.appendChild(container);
- 
-  const root = ReactDOM.createRoot(container);
- 
-  root.render(
-<ChatBox config={config} />
-  );
+  let container = document.getElementById("fontrow-chatbot-root");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "fontrow-chatbot-root";
+    document.body.appendChild(container);
+  }
+
+  if (!container._root) {
+    container._root = ReactDOM.createRoot(container);
+  }
+
+  container._root.render(<ChatBox config={config} />);
 };
