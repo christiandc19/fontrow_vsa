@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5297";
+const API_BASE = "https://api.websmartassistant.com";
 
 export async function createLead(payload) {
   const response = await fetch(`${API_BASE}/api/Leads`, {
@@ -18,20 +18,34 @@ export async function createLead(payload) {
 }
 
 export async function getUserByIP() {
-  const response = await fetch(`${API_BASE}/api/Leads/by-ip`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    // Get user's IP address
+    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipResponse.json();
+    const userIP = ipData.ip;
 
-  if (!response.ok) {
-    if (response.status === 404) return null;
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to find user by IP");
+    const response = await fetch(`${API_BASE}/api/Leads/by-ip/${userIP}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to find user by IP");
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+      // If we can't get the IP, try with a fallback or skip IP detection
+      console.warn("Could not determine IP address:", error.message);
+      return null;
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 export async function postConversation(payload) {
