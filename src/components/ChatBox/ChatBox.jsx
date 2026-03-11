@@ -1,39 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createLead, getUserByIP } from "../../services/widgetApi.js";
-import fontrowConfig from "../../chatbots/fontrow/config";
-import itanexConfig from "../../chatbots/itanex/config";
+import {
+  createLead,
+  getUserByIP,
+  postConversation,
+} from "../../services/widgetApi.js";
+import { getClientConfig } from "../../chatbots/registry";
 import "./ChatBox.css";
 
 /* ==========================
    API BASE
 ========================== */
-const getApiBase = () => {
-  if (
-    typeof process !== "undefined" &&
-    process.env &&
-    process.env.REACT_APP_API_URL
-  ) {
-    return process.env.REACT_APP_API_URL;
-  }
-
-  // Replace this with your real deployed API URL in production
-  return "http://localhost:5297";
-};
-
-const API_BASE = getApiBase();
+const API_BASE = "http://localhost:5297";
 
 /* ==========================
    HELPERS
 ========================== */
 const getBotConfig = (clientKey) => {
-  switch (clientKey) {
-    case "fontrow":
-      return fontrowConfig;
-    case "itanex":
-      return itanexConfig;
-    default:
-      return {};
-  }
+  return getClientConfig(clientKey) || {};
 };
 
 const formatDateLabel = (iso) => {
@@ -386,12 +369,10 @@ export default function ChatBox({ config = {} }) {
             });
           }
 
-          console.log("Found existing user:", user);
           return user;
         }
       }
 
-      console.log("No existing user found by IP");
       return null;
     } catch (error) {
       console.error("Error checking user by IP:", error);
@@ -409,7 +390,6 @@ export default function ChatBox({ config = {} }) {
     const dataToUse = userDataParam || foundUserData;
 
     if (!dataToUse) {
-      console.log("No user data available, storing conversation locally");
       setPendingConversations((prev) => [
         ...prev,
         {
@@ -617,7 +597,6 @@ export default function ChatBox({ config = {} }) {
         const leadId = foundUserData?.id;
 
         if (!leadId) {
-          console.error("No lead ID found in userData:", foundUserData);
           throw new Error("Lead ID not found in user data");
         }
 
@@ -635,7 +614,6 @@ export default function ChatBox({ config = {} }) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("Conversation API error:", errorText);
           throw new Error(`Failed to save conversation: ${errorText}`);
         }
       } else {
@@ -665,7 +643,6 @@ export default function ChatBox({ config = {} }) {
         if (newUserData) {
           setFoundUserData(newUserData);
           setPendingConversations([]);
-          console.log("User registered successfully, switched to existing user mode");
         }
       }
 

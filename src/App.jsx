@@ -1,7 +1,6 @@
 import "./App.css";
-import ChatBox from "./components/ChatBox/ChatBox";
-
-import fontrowConfig from "./chatbots/fontrow/config";
+import ChatBox from "./components/ChatBox/ChatBox.jsx";
+import fontrowConfig from "./chatbots/fontrow/config.js";
 
 export default function App() {
   return (
