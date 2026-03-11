@@ -10,7 +10,7 @@ import "./ChatBox.css";
 /* ==========================
    API BASE
 ========================== */
-const API_BASE = "http://localhost:5297";
+const API_BASE = "https://api.websmartassistant.com";
 
 /* ==========================
    HELPERS
@@ -620,6 +620,16 @@ export default function ChatBox({ config = {} }) {
         const [firstName = "", ...rest] = formData.name.trim().split(" ");
         const lastName = rest.join(" ");
 
+        // Collect user details
+        let userIP = null;
+        try {
+          const ipResponse = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipResponse.json();
+          userIP = ipData.ip;
+        } catch (error) {
+          console.warn("Could not get IP address:", error);
+        }
+
         const leadPayload = {
           clientKey,
           email: formData.email,
@@ -635,6 +645,11 @@ export default function ChatBox({ config = {} }) {
             ...pendingConversations,
             { message: conversationMessage, sender: "user" },
           ],
+          Details: {
+            Ip: userIP,
+            Browser: navigator.userAgent,
+            Referrer: window.location.origin + window.location.pathname,
+          },
         };
 
         await createLead(leadPayload);
