@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5297";
+const API_BASE = "https://api.websmartassistant.com";
 
 export async function createLead(payload) {
   const response = await fetch(`${API_BASE}/api/Leads`, {
