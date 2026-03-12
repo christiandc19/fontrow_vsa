@@ -337,6 +337,7 @@ export default function ChatBox({ config = {} }) {
   ];
 
   const [isOpen, setIsOpen] = useState(false);
+  const [showLauncher, setShowLauncher] = useState(false);
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
 
@@ -362,8 +363,6 @@ export default function ChatBox({ config = {} }) {
   const [pendingConversations, setPendingConversations] = useState([]);
 
   const scrollRef = useRef(null);
-  const hasAutoOpenedRef = useRef(false);
-  const autoOpenTimer = useRef(null);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -372,6 +371,14 @@ export default function ChatBox({ config = {} }) {
       behavior: "smooth",
     });
   }, [messages, activeFlowId, quoteSelections, callSelections, hasTypedQuestion]);
+
+useEffect(() => {
+  const launcherTimer = setTimeout(() => {
+    setShowLauncher(true);
+  }, 1500);
+
+  return () => clearTimeout(launcherTimer);
+}, []);
 
   const openLink = (url) => {
     if (!url) return;
@@ -483,27 +490,9 @@ export default function ChatBox({ config = {} }) {
     await saveConversationMessage(welcomeMessage, "bot", userData);
   };
 
-  useEffect(() => {
-    if (hasAutoOpenedRef.current) return;
-    hasAutoOpenedRef.current = true;
-
-    autoOpenTimer.current = setTimeout(() => {
-      openChat();
-    }, 3000);
-
-    return () => {
-      if (autoOpenTimer.current) clearTimeout(autoOpenTimer.current);
-    };
-  }, []);
-
   const closeChat = () => setIsOpen(false);
 
   const handleToggle = () => {
-    if (autoOpenTimer.current) {
-      clearTimeout(autoOpenTimer.current);
-      autoOpenTimer.current = null;
-    }
-
     isOpen ? closeChat() : openChat();
   };
 
@@ -775,7 +764,7 @@ export default function ChatBox({ config = {} }) {
 
   return (
     <>
-      {!isOpen && (
+      {showLauncher && !isOpen && (
         <button
           className="chat-launcher"
           onClick={handleToggle}
