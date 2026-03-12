@@ -1,9 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  createLead,
-  getUserByIP,
-  postConversation,
-} from "../../services/widgetApi.js";
+import { createLead, getUserByIP } from "../../services/widgetApi.js";
 import { getClientConfig } from "../../chatbots/registry";
 import "./ChatBox.css";
 
@@ -65,7 +61,13 @@ const ChatHeader = ({ onClose, title, subtitle, logoUrl }) => (
         <div className="chatbox-subtitle">{subtitle}</div>
       </div>
     </div>
-    <button className="chat-close-btn" onClick={onClose}>
+
+    <button
+      className="chat-close-btn"
+      onClick={onClose}
+      type="button"
+      aria-label="Close chat"
+    >
       ×
     </button>
   </div>
@@ -91,6 +93,7 @@ const MainMenuBubbleNav = ({ items, activeId, onSelect }) => (
         key={item.id}
         className={`nav-bubble ${activeId === item.id ? "active" : ""}`}
         onClick={() => onSelect(item)}
+        type="button"
       >
         {item.label}
       </button>
@@ -108,6 +111,7 @@ const MainMenuButtons = ({ items, visible, onSelect }) => {
           key={item.id}
           className="cta-btn"
           onClick={() => onSelect(item)}
+          type="button"
         >
           {item.label}
         </button>
@@ -123,6 +127,7 @@ const StepCTAs = ({ options, onSelect }) => (
         key={option}
         className="step-cta-btn"
         onClick={() => onSelect(option)}
+        type="button"
       >
         {option}
       </button>
@@ -139,6 +144,7 @@ const BubbleStep = ({ question, options, selected, onSelect }) => (
           key={option}
           className={`bubble ${selected === option ? "selected" : ""}`}
           onClick={() => onSelect(option)}
+          type="button"
         >
           {option}
         </button>
@@ -182,7 +188,6 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
   const handleClick = (day) => {
     if (!day) return;
     if (isDisabled(viewYear, viewMonth, day)) return;
-
     const date = new Date(viewYear, viewMonth, day);
     onSelectDate(toISODate(date));
   };
@@ -192,6 +197,7 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
       <div className="calendar-header">
         <button
           className="calendar-nav-btn"
+          type="button"
           onClick={() => {
             const newMonth = viewMonth - 1;
             if (newMonth < 0) {
@@ -211,6 +217,7 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
 
         <button
           className="calendar-nav-btn"
+          type="button"
           onClick={() => {
             const newMonth = viewMonth + 1;
             if (newMonth > 11) {
@@ -243,6 +250,7 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
           return (
             <button
               key={idx}
+              type="button"
               className={`calendar-day ${disabled ? "disabled-date" : ""} ${
                 selected ? "selected-date" : ""
               }`}
@@ -279,6 +287,11 @@ export default function ChatBox({ config = {} }) {
     mergedConfig?.headerSubtitle || "We’re here to help you explore options.";
   const welcomeMessage =
     mergedConfig?.welcomeMessage || "How can I help you today?";
+
+  const launcherTitle =
+    mergedConfig?.launcherTitle || mergedConfig?.communityName || "Community Assistant";
+  const launcherSubtitle =
+    mergedConfig?.launcherSubtitle || "Chat with our team";
 
   const mainMenu = Array.isArray(mergedConfig?.mainMenu)
     ? mergedConfig.mainMenu
@@ -335,6 +348,7 @@ export default function ChatBox({ config = {} }) {
   const [pendingConversations, setPendingConversations] = useState([]);
 
   const scrollRef = useRef(null);
+  const hasAutoOpenedRef = useRef(false);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -454,6 +468,17 @@ export default function ChatBox({ config = {} }) {
     await saveConversationMessage(welcomeMessage, "bot", userData);
   };
 
+  useEffect(() => {
+    if (hasAutoOpenedRef.current) return;
+    hasAutoOpenedRef.current = true;
+
+    const timer = setTimeout(() => {
+      openChat();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const closeChat = () => setIsOpen(false);
   const handleToggle = () => (isOpen ? closeChat() : openChat());
 
@@ -476,9 +501,7 @@ export default function ChatBox({ config = {} }) {
 
     if (foundUserData && formData.name === "") {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${
-          foundUserData.lastName || ""
-        }`.trim(),
+        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
@@ -495,9 +518,7 @@ export default function ChatBox({ config = {} }) {
 
     if (foundUserData && formData.name === "") {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${
-          foundUserData.lastName || ""
-        }`.trim(),
+        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
@@ -565,9 +586,7 @@ export default function ChatBox({ config = {} }) {
       setFormData(INITIAL_FORM);
     } else {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${
-          foundUserData.lastName || ""
-        }`.trim(),
+        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
@@ -620,10 +639,9 @@ export default function ChatBox({ config = {} }) {
         const [firstName = "", ...rest] = formData.name.trim().split(" ");
         const lastName = rest.join(" ");
 
-        // Collect user details
         let userIP = null;
         try {
-          const ipResponse = await fetch('https://api.ipify.org?format=json');
+          const ipResponse = await fetch("https://api.ipify.org?format=json");
           const ipData = await ipResponse.json();
           userIP = ipData.ip;
         } catch (error) {
@@ -724,10 +742,8 @@ export default function ChatBox({ config = {} }) {
   const showQuoteForm = showQuoteSection && quoteHasAll && !foundUserData;
   const showQuoteSubmit = showQuoteSection && quoteHasAll && !!foundUserData;
 
-  const showScheduleForm =
-    showScheduleSection && callHasBoth && !foundUserData;
-  const showScheduleSubmit =
-    showScheduleSection && callHasBoth && !!foundUserData;
+  const showScheduleForm = showScheduleSection && callHasBoth && !foundUserData;
+  const showScheduleSubmit = showScheduleSection && callHasBoth && !!foundUserData;
 
   const showAskForm = showAskSection && hasTypedQuestion && !foundUserData;
   const showAskSubmit = showAskSection && hasTypedQuestion && !!foundUserData;
@@ -735,11 +751,26 @@ export default function ChatBox({ config = {} }) {
   return (
     <>
       {!isOpen && (
-        <button className="chat-toggle-btn" onClick={handleToggle}>
-          {logoUrl && (
-            <img src={logoUrl} alt="Logo" className="chat-toggle-logo" />
-          )}
-          <span className="chat-toggle-label">Chat</span>
+        <button
+          className="chat-launcher"
+          onClick={handleToggle}
+          type="button"
+          aria-label="Open chat"
+        >
+          <div className="chat-launcher-avatar-wrap">
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="chat-launcher-avatar" />
+            ) : (
+              <div className="chat-launcher-avatar-fallback">C</div>
+            )}
+          </div>
+
+          <div className="chat-launcher-text">
+            <div className="chat-launcher-title">{launcherTitle}</div>
+            <div className="chat-launcher-subtitle">{launcherSubtitle}</div>
+          </div>
+
+          <div className="chat-launcher-icon">×</div>
         </button>
       )}
 
@@ -783,8 +814,7 @@ export default function ChatBox({ config = {} }) {
               {showProjectsSection && (
                 <div className="flow-section">
                   <div className="step-question">
-                    {mergedConfig?.projectsTitle ||
-                      "Select a project category:"}
+                    {mergedConfig?.projectsTitle || "Select a project category:"}
                   </div>
                   <StepCTAs
                     options={projects.map((p) => p.label)}
@@ -795,9 +825,7 @@ export default function ChatBox({ config = {} }) {
 
               {showQuoteSection && (
                 <div className="pricing-section">
-                  {quoteCfg.intro && (
-                    <div className="step-question">{quoteCfg.intro}</div>
-                  )}
+                  {quoteCfg.intro && <div className="step-question">{quoteCfg.intro}</div>}
 
                   <div className="step-block">
                     <div className="step-question">
@@ -839,27 +867,26 @@ export default function ChatBox({ config = {} }) {
                     </div>
                   )}
 
-                  {quoteSelections.projectType &&
-                    quoteSelections.clientType && (
-                      <div className="step-block">
-                        <div className="step-question">
-                          {quoteCfg.q3 || "What is your timeline?"}
-                        </div>
-
-                        {quoteSelections.timeline === null ? (
-                          <StepCTAs
-                            options={QUOTE_TIMELINES}
-                            onSelect={handleSelectTimeline}
-                          />
-                        ) : (
-                          <BubbleStep
-                            options={QUOTE_TIMELINES}
-                            selected={quoteSelections.timeline}
-                            onSelect={handleSelectTimeline}
-                          />
-                        )}
+                  {quoteSelections.projectType && quoteSelections.clientType && (
+                    <div className="step-block">
+                      <div className="step-question">
+                        {quoteCfg.q3 || "What is your timeline?"}
                       </div>
-                    )}
+
+                      {quoteSelections.timeline === null ? (
+                        <StepCTAs
+                          options={QUOTE_TIMELINES}
+                          onSelect={handleSelectTimeline}
+                        />
+                      ) : (
+                        <BubbleStep
+                          options={QUOTE_TIMELINES}
+                          selected={quoteSelections.timeline}
+                          onSelect={handleSelectTimeline}
+                        />
+                      )}
+                    </div>
+                  )}
 
                   {showQuoteForm && (
                     <div className="step-block">
@@ -892,11 +919,7 @@ export default function ChatBox({ config = {} }) {
                           placeholder="Phone"
                           required
                         />
-                        <button
-                          className="cta-btn"
-                          type="submit"
-                          disabled={isSubmittingLead}
-                        >
+                        <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
                           {isSubmittingLead ? "Sending…" : "Submit"}
                         </button>
                       </form>
@@ -911,19 +934,14 @@ export default function ChatBox({ config = {} }) {
                       </div>
 
                       <div className="existing-user-info">
-                        <p>
-                          <strong>Name:</strong> {formData.name}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {formData.email}
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> {formData.phone}
-                        </p>
+                        <p><strong>Name:</strong> {formData.name}</p>
+                        <p><strong>Email:</strong> {formData.email}</p>
+                        <p><strong>Phone:</strong> {formData.phone}</p>
                         <button
                           className="cta-btn"
                           onClick={handleSubmitForm}
                           disabled={isSubmittingLead}
+                          type="button"
                         >
                           {isSubmittingLead
                             ? "Sending…"
@@ -937,14 +955,11 @@ export default function ChatBox({ config = {} }) {
 
               {showScheduleSection && (
                 <div className="schedule-section">
-                  {scheduleCfg.intro && (
-                    <div className="step-question">{scheduleCfg.intro}</div>
-                  )}
+                  {scheduleCfg.intro && <div className="step-question">{scheduleCfg.intro}</div>}
 
                   <div className="step-block">
                     <div className="step-question">
-                      {scheduleCfg.q1 ||
-                        "What date would you like to schedule a call?"}
+                      {scheduleCfg.q1 || "What date would you like to schedule a call?"}
                     </div>
 
                     <ScheduleCalendar
@@ -954,8 +969,7 @@ export default function ChatBox({ config = {} }) {
 
                     {callSelections.date && (
                       <div className="schedule-selected">
-                        Selected date:{" "}
-                        <span>{formatDateLabel(callSelections.date)}</span>
+                        Selected date: <span>{formatDateLabel(callSelections.date)}</span>
                       </div>
                     )}
                   </div>
@@ -1012,11 +1026,7 @@ export default function ChatBox({ config = {} }) {
                           placeholder="Phone"
                           required
                         />
-                        <button
-                          className="cta-btn"
-                          type="submit"
-                          disabled={isSubmittingLead}
-                        >
+                        <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
                           {isSubmittingLead ? "Sending…" : "Submit"}
                         </button>
                       </form>
@@ -1033,19 +1043,14 @@ export default function ChatBox({ config = {} }) {
                       </div>
 
                       <div className="existing-user-info">
-                        <p>
-                          <strong>Name:</strong> {formData.name}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {formData.email}
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> {formData.phone}
-                        </p>
+                        <p><strong>Name:</strong> {formData.name}</p>
+                        <p><strong>Email:</strong> {formData.email}</p>
+                        <p><strong>Phone:</strong> {formData.phone}</p>
                         <button
                           className="cta-btn"
                           onClick={handleSubmitForm}
                           disabled={isSubmittingLead}
+                          type="button"
                         >
                           {isSubmittingLead
                             ? "Sending…"
@@ -1070,9 +1075,7 @@ export default function ChatBox({ config = {} }) {
                           className="ask-textarea"
                           value={askQuestion}
                           onChange={(e) => setAskQuestion(e.target.value)}
-                          placeholder={
-                            askCfg.placeholder || "Type your question here..."
-                          }
+                          placeholder={askCfg.placeholder || "Type your question here..."}
                           required
                           rows="3"
                         />
@@ -1112,11 +1115,7 @@ export default function ChatBox({ config = {} }) {
                           placeholder="Phone"
                           required
                         />
-                        <button
-                          className="cta-btn"
-                          type="submit"
-                          disabled={isSubmittingLead}
-                        >
+                        <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
                           {isSubmittingLead ? "Sending…" : "Submit"}
                         </button>
                       </form>
@@ -1129,19 +1128,14 @@ export default function ChatBox({ config = {} }) {
                       </div>
 
                       <div className="existing-user-info">
-                        <p>
-                          <strong>Name:</strong> {formData.name}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {formData.email}
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> {formData.phone}
-                        </p>
+                        <p><strong>Name:</strong> {formData.name}</p>
+                        <p><strong>Email:</strong> {formData.email}</p>
+                        <p><strong>Phone:</strong> {formData.phone}</p>
                         <button
                           className="cta-btn"
                           onClick={handleSubmitForm}
                           disabled={isSubmittingLead}
+                          type="button"
                         >
                           {isSubmittingLead
                             ? "Sending…"
@@ -1162,7 +1156,7 @@ export default function ChatBox({ config = {} }) {
           />
 
           {activeFlowId && (
-            <button className="back-menu-btn" onClick={handleBackToMainMenu}>
+            <button className="back-menu-btn" onClick={handleBackToMainMenu} type="button">
               Back to Main Menu
             </button>
           )}
