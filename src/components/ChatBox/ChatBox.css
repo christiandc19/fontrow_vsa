@@ -18,15 +18,21 @@
   animation: chatSlideInRight 0.55s ease forwards;
 }
 
-@keyframes chatSlideInRight {
+@keyframes chatExpandUp {
   0% {
     opacity: 0;
-    transform: translateX(60px);
+    transform: translateY(24px) scale(0.96);
   }
+
   100% {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0) scale(1);
   }
+}
+
+.chatbox-container {
+  animation: chatExpandUp 0.38s ease-out forwards;
+  transform-origin: bottom right;
 }
 
 .chatbox-header {
@@ -429,8 +435,8 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   z-index: 999999;
-  animation: launcherSlideIn 0.45s ease forwards;
-}
+  animation: launcherSlideIn 3s cubic-bezier(.19,1,.22,1) forwards;
+  }
 
 @keyframes launcherSlideIn {
   0% {

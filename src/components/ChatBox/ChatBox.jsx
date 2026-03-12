@@ -468,19 +468,27 @@ export default function ChatBox({ config = {} }) {
     await saveConversationMessage(welcomeMessage, "bot", userData);
   };
 
-  useEffect(() => {
-    if (hasAutoOpenedRef.current) return;
-    hasAutoOpenedRef.current = true;
+const autoOpenTimer = useRef(null);
 
-    const timer = setTimeout(() => {
-      openChat();
-    }, 500);
+useEffect(() => {
+  if (hasAutoOpenedRef.current) return;
+  hasAutoOpenedRef.current = true;
 
-    return () => clearTimeout(timer);
-  }, []);
+  autoOpenTimer.current = setTimeout(() => {
+    openChat();
+  }, 3000);
+
+  return () => clearTimeout(autoOpenTimer.current);
+}, [])
 
   const closeChat = () => setIsOpen(false);
-  const handleToggle = () => (isOpen ? closeChat() : openChat());
+  const handleToggle = () => {
+    if (autoOpenTimer.current) {
+      clearTimeout(autoOpenTimer.current);
+    }
+
+  isOpen ? closeChat() : openChat();
+};
 
   const handleMainMenuSelect = (item) => {
     saveConversationMessage(item.label, "user");
