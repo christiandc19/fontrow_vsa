@@ -289,9 +289,23 @@ export default function ChatBox({ config = {} }) {
     mergedConfig?.welcomeMessage || "How can I help you today?";
 
   const launcherTitle =
-    mergedConfig?.launcherTitle || mergedConfig?.communityName || "Community Assistant";
+    mergedConfig?.launcherTitle ||
+    mergedConfig?.communityName ||
+    "Community Assistant";
   const launcherSubtitle =
     mergedConfig?.launcherSubtitle || "Chat with our team";
+
+  const theme = mergedConfig?.theme || {};
+  const themeVars = {
+    "--chat-primary": theme.primary || "#935135",
+    "--chat-primary-hover": theme.primaryHover || "#7c402c",
+    "--chat-header-bg": theme.headerBg || "#fcf8ec",
+    "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
+    "--chat-user-bubble-bg": theme.userBubbleBg || "#935135",
+    "--chat-text-dark": theme.textDark || "#333333",
+    "--chat-launcher-bg": theme.launcherBg || "#ffffff",
+    "--chat-launcher-accent": theme.launcherAccent || "#16335b",
+  };
 
   const mainMenu = Array.isArray(mergedConfig?.mainMenu)
     ? mergedConfig.mainMenu
@@ -349,6 +363,7 @@ export default function ChatBox({ config = {} }) {
 
   const scrollRef = useRef(null);
   const hasAutoOpenedRef = useRef(false);
+  const autoOpenTimer = useRef(null);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -468,27 +483,29 @@ export default function ChatBox({ config = {} }) {
     await saveConversationMessage(welcomeMessage, "bot", userData);
   };
 
-const autoOpenTimer = useRef(null);
+  useEffect(() => {
+    if (hasAutoOpenedRef.current) return;
+    hasAutoOpenedRef.current = true;
 
-useEffect(() => {
-  if (hasAutoOpenedRef.current) return;
-  hasAutoOpenedRef.current = true;
+    autoOpenTimer.current = setTimeout(() => {
+      openChat();
+    }, 3000);
 
-  autoOpenTimer.current = setTimeout(() => {
-    openChat();
-  }, 3000);
-
-  return () => clearTimeout(autoOpenTimer.current);
-}, [])
+    return () => {
+      if (autoOpenTimer.current) clearTimeout(autoOpenTimer.current);
+    };
+  }, []);
 
   const closeChat = () => setIsOpen(false);
+
   const handleToggle = () => {
     if (autoOpenTimer.current) {
       clearTimeout(autoOpenTimer.current);
+      autoOpenTimer.current = null;
     }
 
-  isOpen ? closeChat() : openChat();
-};
+    isOpen ? closeChat() : openChat();
+  };
 
   const handleMainMenuSelect = (item) => {
     saveConversationMessage(item.label, "user");
@@ -764,6 +781,7 @@ useEffect(() => {
           onClick={handleToggle}
           type="button"
           aria-label="Open chat"
+          style={themeVars}
         >
           <div className="chat-launcher-avatar-wrap">
             {logoUrl ? (
@@ -783,7 +801,12 @@ useEffect(() => {
       )}
 
       {isOpen && (
-        <div className="chatbox-container" role="dialog" aria-label="Chat with us">
+        <div
+          className="chatbox-container"
+          role="dialog"
+          aria-label="Chat with us"
+          style={themeVars}
+        >
           <ChatHeader
             onClose={handleToggle}
             title={headerTitle}

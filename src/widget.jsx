@@ -1,28 +1,16 @@
-import "./process-shim.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import ChatBox from "./components/ChatBox/ChatBox.jsx";
-import "./index.css";
-import "./App.css";
+import ChatBox from "./components/ChatBox/ChatBox";
+import "./components/ChatBox/ChatBox.css";
 
-function WebSmartAssistant(config = {}) {
-  let container = document.getElementById("wsa-widget-root");
+window.WebSmartAssistant = function (config = {}) {
+  const existing = document.getElementById("websmartassistant-root");
+  if (existing) existing.remove();
 
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "wsa-widget-root";
-    document.body.appendChild(container);
-  }
+  const container = document.createElement("div");
+  container.id = "websmartassistant-root";
+  document.body.appendChild(container);
 
-  if (!container._root) {
-    container._root = ReactDOM.createRoot(container);
-  }
-
-  container._root.render(<ChatBox config={config} />);
-}
-
-if (typeof window !== "undefined") {
-  window.WebSmartAssistant = WebSmartAssistant;
-}
-
-export default WebSmartAssistant;
+  const root = ReactDOM.createRoot(container);
+  root.render(<ChatBox config={config} />);
+};

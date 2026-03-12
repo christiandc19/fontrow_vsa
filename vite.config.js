@@ -7,12 +7,13 @@ export default defineConfig({
     "process.env": {},
   },
   build: {
+    emptyOutDir: true,
+    cssCodeSplit: false,
     lib: {
       entry: "src/widget.jsx",
       name: "WebSmartAssistant",
       fileName: () => "widget.js",
       formats: ["iife"],
     },
-    cssCodeSplit: false,
   },
 });
