@@ -1,10 +1,12 @@
 const API_BASE = "https://api.websmartassistant.com";
+const API_KEY = import.meta.env.VITE_CHATBOT_API_KEY;
 
 export async function createLead(payload) {
   const response = await fetch(`${API_BASE}/api/Leads`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-Api-Key": API_KEY,
     },
     body: JSON.stringify(payload),
   });
@@ -28,6 +30,7 @@ export async function getUserByIP() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "X-Api-Key": API_KEY,
       },
     });
 
@@ -53,6 +56,7 @@ export async function postConversation(payload) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-Api-Key": API_KEY,
     },
     body: JSON.stringify(payload),
   });
