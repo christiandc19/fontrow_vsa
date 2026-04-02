@@ -1,11 +1,20 @@
-const API_BASE = "https://api.websmartassistant.com";
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : process.env.REACT_APP_API_URL;
+
+const API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CHATBOT_API_KEY)
+  ? import.meta.env.VITE_CHATBOT_API_KEY
+  : process.env.REACT_APP_CHATBOT_API_KEY;
+
+const authHeaders = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${API_KEY}`,
+};
 
 export async function createLead(payload) {
   const response = await fetch(`${API_BASE}/api/Leads`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders,
     body: JSON.stringify(payload),
   });
 
@@ -26,9 +35,7 @@ export async function getUserByIP() {
 
     const response = await fetch(`${API_BASE}/api/Leads/by-ip/${userIP}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: authHeaders,
     });
 
     if (!response.ok) {
@@ -51,9 +58,7 @@ export async function getUserByIP() {
 export async function postConversation(payload) {
   const response = await fetch(`${API_BASE}/api/Conversations`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders,
     body: JSON.stringify(payload),
   });
 

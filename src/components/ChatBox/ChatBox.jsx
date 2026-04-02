@@ -6,7 +6,18 @@ import "./ChatBox.css";
 /* ==========================
    API BASE
 ========================== */
-const API_BASE = "https://api.websmartassistant.com";
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : process.env.REACT_APP_API_URL;
+
+const API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CHATBOT_API_KEY)
+  ? import.meta.env.VITE_CHATBOT_API_KEY
+  : process.env.REACT_APP_CHATBOT_API_KEY;
+
+const authHeaders = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${API_KEY}`,
+};
 
 /* ==========================
    HELPERS
@@ -448,7 +459,7 @@ useEffect(() => {
 
       const res = await fetch(`${API_BASE}/api/Conversations`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders,
         body: JSON.stringify(payload),
       });
 
@@ -641,7 +652,7 @@ useEffect(() => {
 
         const response = await fetch(`${API_BASE}/api/Conversations`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders,
           body: JSON.stringify(conversationPayload),
         });
 
