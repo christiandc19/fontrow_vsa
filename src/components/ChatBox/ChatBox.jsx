@@ -5,16 +5,21 @@ import "./ChatBox.css";
 
 /* ==========================
    API BASE
+   Main backend URL used for creating leads
+   and saving conversations.
 ========================== */
 const API_BASE = "https://api.websmartassistant.com";
 
 /* ==========================
    HELPERS
 ========================== */
+
+/* Returns brand/client chatbot config */
 const getBotConfig = (clientKey) => {
   return getClientConfig(clientKey) || {};
 };
 
+/* Formats ISO date into readable label */
 const formatDateLabel = (iso) => {
   if (!iso) return "";
   const d = new Date(iso);
@@ -25,6 +30,7 @@ const formatDateLabel = (iso) => {
   });
 };
 
+/* Month names for calendar UI */
 const monthNames = [
   "January",
   "February",
@@ -40,8 +46,10 @@ const monthNames = [
   "December",
 ];
 
+/* Weekday labels for calendar UI */
 const weekdayShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
+/* Converts JS Date to YYYY-MM-DD */
 const toISODate = (date) => {
   const y = date.getFullYear();
   const m = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -52,6 +60,8 @@ const toISODate = (date) => {
 /* ==========================
    UI COMPONENTS
 ========================== */
+
+/* Top header of the open chatbox */
 const ChatHeader = ({ onClose, title, subtitle, logoUrl }) => (
   <div className="chatbox-header">
     <div className="chatbox-header-left">
@@ -62,6 +72,7 @@ const ChatHeader = ({ onClose, title, subtitle, logoUrl }) => (
       </div>
     </div>
 
+    {/* Close button should collapse chat back to the launcher */}
     <button
       className="chat-close-btn"
       onClick={onClose}
@@ -73,6 +84,7 @@ const ChatHeader = ({ onClose, title, subtitle, logoUrl }) => (
   </div>
 );
 
+/* Renders bot and user messages */
 const ChatMessages = ({ messages }) => (
   <div className="chat-messages">
     {messages.map((msg) => (
@@ -86,6 +98,7 @@ const ChatMessages = ({ messages }) => (
   </div>
 );
 
+/* Small bubble nav shown when a flow is active */
 const MainMenuBubbleNav = ({ items, activeId, onSelect }) => (
   <div className="mainmenu-bubble-nav">
     {items.map((item) => (
@@ -101,6 +114,7 @@ const MainMenuBubbleNav = ({ items, activeId, onSelect }) => (
   </div>
 );
 
+/* Main action buttons shown at bottom when no flow is active */
 const MainMenuButtons = ({ items, visible, onSelect }) => {
   if (!visible) return null;
 
@@ -120,6 +134,7 @@ const MainMenuButtons = ({ items, visible, onSelect }) => {
   );
 };
 
+/* Standard CTA list used in flow steps */
 const StepCTAs = ({ options, onSelect }) => (
   <div className="step-cta-list">
     {options.map((option) => (
@@ -135,6 +150,7 @@ const StepCTAs = ({ options, onSelect }) => (
   </div>
 );
 
+/* Bubble options after one is selected */
 const BubbleStep = ({ question, options, selected, onSelect }) => (
   <div className="step-block">
     {question && <div className="step-question">{question}</div>}
@@ -153,6 +169,7 @@ const BubbleStep = ({ question, options, selected, onSelect }) => (
   </div>
 );
 
+/* Calendar picker for schedule flow */
 const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -169,12 +186,14 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
   for (let i = 0; i < startWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
+  /* Disable past dates */
   const isDisabled = (year, month, day) => {
     const test = new Date(year, month, day);
     test.setHours(0, 0, 0, 0);
     return test < today;
   };
 
+  /* Check selected date */
   const isSelected = (year, month, day) => {
     if (!selectedDate) return false;
     const d = new Date(selectedDate);
@@ -185,6 +204,7 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
     );
   };
 
+  /* Select calendar date */
   const handleClick = (day) => {
     if (!day) return;
     if (isDisabled(viewYear, viewMonth, day)) return;
@@ -270,14 +290,17 @@ const ScheduleCalendar = ({ selectedDate, onSelectDate }) => {
    MAIN CHATBOX
 ========================== */
 export default function ChatBox({ config = {} }) {
+  /* Determine which chatbot brand config to load */
   const clientKey = config?.clientKey || "default";
   const brandConfig = getBotConfig(clientKey);
 
+  /* Merge brand config with current runtime config */
   const mergedConfig = {
     ...brandConfig,
     ...config,
   };
 
+  /* Branding and text content */
   const logoUrl = mergedConfig?.logoUrl || null;
   const headerTitle =
     mergedConfig?.headerTitle ||
@@ -288,6 +311,7 @@ export default function ChatBox({ config = {} }) {
   const welcomeMessage =
     mergedConfig?.welcomeMessage || "How can I help you today?";
 
+  /* Launcher pill text */
   const launcherTitle =
     mergedConfig?.launcherTitle ||
     mergedConfig?.communityName ||
@@ -295,6 +319,7 @@ export default function ChatBox({ config = {} }) {
   const launcherSubtitle =
     mergedConfig?.launcherSubtitle || "Chat with our team";
 
+  /* Theme values passed into CSS as variables */
   const theme = mergedConfig?.theme || {};
   const themeVars = {
     "--chat-primary": theme.primary || "#935135",
@@ -307,6 +332,7 @@ export default function ChatBox({ config = {} }) {
     "--chat-launcher-accent": theme.launcherAccent || "#16335b",
   };
 
+  /* Main menu and flow configs */
   const mainMenu = Array.isArray(mergedConfig?.mainMenu)
     ? mergedConfig.mainMenu
     : [];
@@ -336,18 +362,51 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
+  /* Chat open/closed state */
   const [isOpen, setIsOpen] = useState(false);
-  const [showLauncher, setShowLauncher] = useState(false);
+
+  /* Launcher visual modes:
+     hidden -> circle -> pill
+     On close, it returns to circle */
+  const [launcherMode, setLauncherMode] = useState("hidden");
+
+  /* 
+    On first page load:
+    1. show circle
+    2. expand to pill after a short delay
+  */
+  useEffect(() => {
+    const circleTimer = setTimeout(() => {
+      setLauncherMode("circle");
+    }, 250);
+
+    const pillTimer = setTimeout(() => {
+      setLauncherMode("pill");
+    }, 1100);
+
+    return () => {
+      clearTimeout(circleTimer);
+      clearTimeout(pillTimer);
+    };
+  }, []);
+
+
+  /* Chat messages */
   const [messages, setMessages] = useState([]);
+
+  /* Active flow like services, quote, schedule, ask */
   const [activeFlowId, setActiveFlowId] = useState(null);
 
+  /* User lookup by IP */
   const [foundUserData, setFoundUserData] = useState(null);
   const [isCheckingIP, setIsCheckingIP] = useState(false);
 
+  /* Contact form */
   const INITIAL_FORM = { name: "", email: "", phone: "" };
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
+  /* Quote flow selections */
   const INITIAL_QUOTE = {
     projectType: null,
     clientType: null,
@@ -355,15 +414,21 @@ export default function ChatBox({ config = {} }) {
   };
   const [quoteSelections, setQuoteSelections] = useState(INITIAL_QUOTE);
 
+  /* Call scheduling selections */
   const INITIAL_CALL = { date: null, time: null };
   const [callSelections, setCallSelections] = useState(INITIAL_CALL);
 
+  /* Ask flow */
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
+
+  /* Queue messages until a lead exists */
   const [pendingConversations, setPendingConversations] = useState([]);
 
+  /* Auto-scroll chat content */
   const scrollRef = useRef(null);
 
+  /* Scroll to bottom when messages or flow content changes */
   useEffect(() => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTo({
@@ -372,19 +437,31 @@ export default function ChatBox({ config = {} }) {
     });
   }, [messages, activeFlowId, quoteSelections, callSelections, hasTypedQuestion]);
 
-useEffect(() => {
-  const launcherTimer = setTimeout(() => {
-    setShowLauncher(true);
-  }, 1500);
+  /* On page load:
+     first show small circle,
+     then expand to launcher pill */
+  useEffect(() => {
+    const showCircleTimer = setTimeout(() => {
+      setLauncherMode("circle");
+    }, 300);
 
-  return () => clearTimeout(launcherTimer);
-}, []);
+    const expandToPillTimer = setTimeout(() => {
+      setLauncherMode("pill");
+    }, 1100);
 
+    return () => {
+      clearTimeout(showCircleTimer);
+      clearTimeout(expandToPillTimer);
+    };
+  }, []);
+
+  /* Open URL in new browser tab */
   const openLink = (url) => {
     if (!url) return;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  /* Look up returning visitor by IP */
   const checkUserByIP = async (updateFormData = true) => {
     setIsCheckingIP(true);
 
@@ -418,6 +495,8 @@ useEffect(() => {
     }
   };
 
+  /* Save a chat message to the API
+     If no lead exists yet, queue it locally first */
   const saveConversationMessage = async (
     message,
     sender = "user",
@@ -461,41 +540,70 @@ useEffect(() => {
     }
   };
 
-  const openChat = async () => {
-    setIsOpen(true);
-    setMessages([
-      {
-        id: "welcome",
-        sender: "bot",
-        text: welcomeMessage,
-        isWelcome: true,
-      },
-    ]);
+/* Opens the full chat widget */
+const openChat = async () => {
+  setIsOpen(true);
 
-    setActiveFlowId(null);
-    setQuoteSelections(INITIAL_QUOTE);
-    setCallSelections(INITIAL_CALL);
-    setAskQuestion("");
-    setHasTypedQuestion(false);
+  setMessages([
+    {
+      id: "welcome",
+      sender: "bot",
+      text: welcomeMessage,
+      isWelcome: true,
+    },
+  ]);
 
-    setFoundUserData(null);
-    setPendingConversations([]);
+  setActiveFlowId(null);
+  setQuoteSelections(INITIAL_QUOTE);
+  setCallSelections(INITIAL_CALL);
+  setAskQuestion("");
+  setHasTypedQuestion(false);
 
-    const userData = await checkUserByIP();
+  setFoundUserData(null);
+  setPendingConversations([]);
 
-    if (!userData) {
-      setFormData(INITIAL_FORM);
-    }
+  const userData = await checkUserByIP();
 
-    await saveConversationMessage(welcomeMessage, "bot", userData);
-  };
+  if (!userData) {
+    setFormData(INITIAL_FORM);
+  }
 
-  const closeChat = () => setIsOpen(false);
+  await saveConversationMessage(welcomeMessage, "bot", userData);
+};
 
+/* 
+  Close the full widget back to circle only
+*/
+const closeChat = () => {
+  setIsOpen(false);
+  setLauncherMode("circle");
+};
+
+/* 
+  Expand the closed circle into the preview pill
+*/
+const expandLauncherToPill = () => {
+  setLauncherMode("pill");
+};
+
+/* 
+  Collapse the preview pill back to circle
+*/
+const collapseLauncherToCircle = (e) => {
+  if (e) e.stopPropagation();
+  setLauncherMode("circle");
+};
+
+  /* Optional helper if you ever need a toggle */
   const handleToggle = () => {
-    isOpen ? closeChat() : openChat();
+    if (isOpen) {
+      closeChat();
+    } else {
+      openChat();
+    }
   };
 
+  /* Main menu click handler */
   const handleMainMenuSelect = (item) => {
     saveConversationMessage(item.label, "user");
 
@@ -522,6 +630,7 @@ useEffect(() => {
     }
   };
 
+  /* Return to main menu */
   const handleBackToMainMenu = () => {
     saveConversationMessage("Back to Main Menu", "user");
     setActiveFlowId(null);
@@ -539,6 +648,7 @@ useEffect(() => {
     }
   };
 
+  /* Open selected service link */
   const handleServiceSelect = (label) => {
     const svc = services.find((s) => s.label === label);
     if (!svc) return;
@@ -546,6 +656,7 @@ useEffect(() => {
     openLink(svc.url);
   };
 
+  /* Open selected project link */
   const handleProjectSelect = (label) => {
     const p = projects.find((x) => x.label === label);
     if (!p) return;
@@ -553,6 +664,7 @@ useEffect(() => {
     openLink(p.url);
   };
 
+  /* Quote selections */
   const handleSelectProjectType = (option) => {
     saveConversationMessage(`Quote - Project Type: ${option}`, "user");
     setQuoteSelections((prev) => ({ ...prev, projectType: option }));
@@ -568,6 +680,7 @@ useEffect(() => {
     setQuoteSelections((prev) => ({ ...prev, timeline: option }));
   };
 
+  /* Schedule selections */
   const handleSelectCallDate = (isoDate) => {
     saveConversationMessage(`Call - Date: ${isoDate}`, "user");
     setCallSelections((prev) => ({ ...prev, date: isoDate }));
@@ -578,17 +691,20 @@ useEffect(() => {
     setCallSelections((prev) => ({ ...prev, time }));
   };
 
+  /* Ask flow first submit */
   const handleAskQuestionSubmit = (e) => {
     e.preventDefault();
     if (!askQuestion.trim()) return;
     setHasTypedQuestion(true);
   };
 
+  /* Update contact form fields */
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  /* Reset flow state after successful submit */
   const resetAllFlows = () => {
     setActiveFlowId(null);
     setQuoteSelections(INITIAL_QUOTE);
@@ -607,6 +723,7 @@ useEffect(() => {
     }
   };
 
+  /* Submit lead / quote / schedule / ask request */
   const handleSubmitForm = async (e) => {
     if (e) e.preventDefault();
     setIsSubmittingLead(true);
@@ -737,6 +854,7 @@ useEffect(() => {
     }
   };
 
+  /* UI visibility states */
   const showMainMenuButtons = !activeFlowId;
 
   const showServicesSection = activeFlowId === "services";
@@ -764,13 +882,25 @@ useEffect(() => {
 
   return (
     <>
-      {showLauncher && !isOpen && (
+{/* ==========================
+   CLOSED LAUNCHER
+   - circle on first load
+   - expands to pill after delay
+   - clicking pill body opens chat
+   - clicking pill X collapses to circle
+========================== */}
+    {launcherMode !== "hidden" && !isOpen && (
+      <div
+        className={`chat-launcher ${launcherMode}`}
+        style={themeVars}
+      >
+        {/* Circle button or left logo area */}
         <button
-          className="chat-launcher"
-          onClick={handleToggle}
+          className="chat-launcher-main"
+          onClick={launcherMode === "circle" ? expandLauncherToPill : openChat}
           type="button"
-          aria-label="Open chat"
-          style={themeVars}
+          aria-label={launcherMode === "circle" ? "Expand chat launcher" : "Open chat"}
+          title={launcherTitle}
         >
           <div className="chat-launcher-avatar-wrap">
             {logoUrl ? (
@@ -780,15 +910,29 @@ useEffect(() => {
             )}
           </div>
 
-          <div className="chat-launcher-text">
-            <div className="chat-launcher-title">{launcherTitle}</div>
-            <div className="chat-launcher-subtitle">{launcherSubtitle}</div>
-          </div>
-
-          <div className="chat-launcher-icon">×</div>
+          {launcherMode === "pill" && (
+            <div className="chat-launcher-text">
+              <div className="chat-launcher-title">{launcherTitle}</div>
+              <div className="chat-launcher-subtitle">{launcherSubtitle}</div>
+            </div>
+          )}
         </button>
-      )}
 
+        {/* Separate X button for the closed pill only */}
+        {launcherMode === "pill" && (
+          <button
+            className="chat-launcher-close"
+            onClick={collapseLauncherToCircle}
+            type="button"
+            aria-label="Collapse launcher"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    )}
+
+      {/* OPEN CHAT WINDOW */}
       {isOpen && (
         <div
           className="chatbox-container"
@@ -797,7 +941,7 @@ useEffect(() => {
           style={themeVars}
         >
           <ChatHeader
-            onClose={handleToggle}
+            onClose={closeChat}
             title={headerTitle}
             subtitle={headerSubtitle}
             logoUrl={logoUrl}
