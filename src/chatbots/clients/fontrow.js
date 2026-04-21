@@ -1,6 +1,7 @@
 const fontrowConfig = {
   clientKey: "fontrow",
   communityName: "Font Row Media",
+
   logoUrl: "https://cdn.websmartassistant.com/clients/fontrow/logo-v2.png",
 
   headerTitle: "Chat with Font Row Media",
@@ -46,12 +47,18 @@ const fontrowConfig = {
     },
   ],
 
+  // future-safe
+  services: [],
+  projects: [],
+  quote: {},
+
   schedule: {
     intro: "Pick a date and time and we’ll confirm a quick call.",
     q1: "What day works best?",
     q2: "What time works best?",
     contactPrompt: "Share your contact details and we’ll confirm the call.",
-    returningPrompt: "Confirm Call",
+    returningPrompt: "We'll confirm your call shortly.",
+    returningButton: "Confirm Call",
     timeSlots: [
       "9:00 AM",
       "10:00 AM",
@@ -67,6 +74,7 @@ const fontrowConfig = {
     placeholder:
       "Ex: new website, redesign, SEO, maintenance, social media…",
     contactPrompt: "Drop your contact info and we’ll reach out shortly.",
+    returningPrompt: "Thanks! We’ll follow up shortly.",
     returningButton: "Send Message",
   },
 };
