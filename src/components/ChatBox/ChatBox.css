@@ -208,6 +208,11 @@
   gap: 14px;
 }
 
+
+.flow-block {
+  margin-top: 12px;
+}
+
 .step-question {
   font-size: 14px;
   color: var(--chat-text-dark);
@@ -808,3 +813,4 @@
     font-size: 12px;
   }
 }
+
