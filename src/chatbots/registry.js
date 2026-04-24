@@ -1,5 +1,5 @@
-import fontrowConfig from "./fontrow/config";
-import itanexConfig from "./itanex/config";
+import fontrowConfig from "./clients/fontrow";
+import itanexConfig from "./clients/itanex";
 
 const chatbotRegistry = {
   fontrow: fontrowConfig,
@@ -7,5 +7,5 @@ const chatbotRegistry = {
 };
 
 export function getClientConfig(clientKey) {
-  return chatbotRegistry[clientKey] || {};
+  return chatbotRegistry[clientKey] || chatbotRegistry["fontrow"];
 }
