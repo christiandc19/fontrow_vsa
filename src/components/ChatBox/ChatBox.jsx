@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createLead, getUserByIP } from "../../services/widgetApi.js";
 import { getClientConfig } from "../../chatbots/registry";
 import "./ChatBox.css";
@@ -11,9 +12,7 @@ import FlowRenderer from "./FlowRenderer";
 
 const API_BASE = "https://api.websmartassistant.com";
 
-const getBotConfig = (clientKey) => {
-  return getClientConfig(clientKey) || {};
-};
+const getBotConfig = (clientKey) => getClientConfig(clientKey) || {};
 
 const formatDateLabel = (iso) => {
   if (!iso) return "";
@@ -26,6 +25,9 @@ const formatDateLabel = (iso) => {
 };
 
 export default function ChatBox({ config = {} }) {
+  const navigate = useNavigate();
+  const scrollRef = useRef(null);
+
   const clientKey = config?.clientKey || "default";
   const brandConfig = getBotConfig(clientKey);
 
@@ -83,11 +85,11 @@ export default function ChatBox({ config = {} }) {
   const scheduleCfg = mergedConfig?.schedule || {};
   const askCfg = mergedConfig?.ask || {};
 
-  const QUOTE_PROJECT_TYPES = quoteCfg.projectTypes || [];
-  const QUOTE_CLIENT_TYPES = quoteCfg.clientTypes || [];
-  const QUOTE_TIMELINES = quoteCfg.timelines || [];
+  const quoteProjectTypes = quoteCfg.projectTypes || [];
+  const quoteClientTypes = quoteCfg.clientTypes || [];
+  const quoteTimelines = quoteCfg.timelines || [];
 
-  const CALL_TIME_SLOTS = scheduleCfg.timeSlots || [
+  const callTimeSlots = scheduleCfg.timeSlots || [
     "9:00 AM",
     "10:00 AM",
     "11:00 AM",
@@ -96,35 +98,27 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
-  const INITIAL_FORM = { name: "", email: "", phone: "" };
-  const INITIAL_QUOTE = {
+  const initialForm = { name: "", email: "", phone: "" };
+  const initialQuote = {
     projectType: null,
     clientType: null,
     timeline: null,
   };
-  const INITIAL_CALL = { date: null, time: null };
+  const initialCall = { date: null, time: null };
 
   const [isOpen, setIsOpen] = useState(false);
   const [launcherMode, setLauncherMode] = useState("hidden");
-
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
-
   const [foundUserData, setFoundUserData] = useState(null);
   const [isCheckingIP, setIsCheckingIP] = useState(false);
-
-  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [formData, setFormData] = useState(initialForm);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
-
-  const [quoteSelections, setQuoteSelections] = useState(INITIAL_QUOTE);
-  const [callSelections, setCallSelections] = useState(INITIAL_CALL);
-
+  const [quoteSelections, setQuoteSelections] = useState(initialQuote);
+  const [callSelections, setCallSelections] = useState(initialCall);
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
-
   const [pendingConversations, setPendingConversations] = useState([]);
-
-  const scrollRef = useRef(null);
 
   useEffect(() => {
     const circleTimer = setTimeout(() => {
@@ -152,6 +146,13 @@ export default function ChatBox({ config = {} }) {
 
   const openLink = (url) => {
     if (!url) return;
+
+    if (url.startsWith("/")) {
+      navigate(url);
+      setIsOpen(false);
+      return;
+    }
+
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -160,26 +161,21 @@ export default function ChatBox({ config = {} }) {
 
     try {
       const userData = await getUserByIP();
+      const user = Array.isArray(userData) ? userData[0] : userData;
 
-      if (userData) {
-        const user = Array.isArray(userData) ? userData[0] : userData;
+      if (!user) return null;
 
-        if (user) {
-          setFoundUserData(user);
+      setFoundUserData(user);
 
-          if (updateFormData) {
-            setFormData({
-              name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-              email: user.email || "",
-              phone: user.phone || "",
-            });
-          }
-
-          return user;
-        }
+      if (updateFormData) {
+        setFormData({
+          name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          email: user.email || "",
+          phone: user.phone || "",
+        });
       }
 
-      return null;
+      return user;
     } catch (error) {
       console.error("Error checking user by IP:", error);
       return null;
@@ -233,7 +229,6 @@ export default function ChatBox({ config = {} }) {
 
   const openChat = async () => {
     setIsOpen(true);
-
     setMessages([
       {
         id: "welcome",
@@ -242,20 +237,18 @@ export default function ChatBox({ config = {} }) {
         isWelcome: true,
       },
     ]);
-
     setActiveFlowId(null);
-    setQuoteSelections(INITIAL_QUOTE);
-    setCallSelections(INITIAL_CALL);
+    setQuoteSelections(initialQuote);
+    setCallSelections(initialCall);
     setAskQuestion("");
     setHasTypedQuestion(false);
-
     setFoundUserData(null);
     setPendingConversations([]);
 
     const userData = await checkUserByIP();
 
     if (!userData) {
-      setFormData(INITIAL_FORM);
+      setFormData(initialForm);
     }
 
     await saveConversationMessage(welcomeMessage, "bot", userData);
@@ -275,6 +268,16 @@ export default function ChatBox({ config = {} }) {
     setLauncherMode("circle");
   };
 
+  const syncKnownUserIntoForm = () => {
+    if (foundUserData && formData.name === "") {
+      setFormData({
+        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
+        email: foundUserData.email || "",
+        phone: foundUserData.phone || "",
+      });
+    }
+  };
+
   const handleMainMenuSelect = (item) => {
     saveConversationMessage(item.label, "user");
 
@@ -285,37 +288,24 @@ export default function ChatBox({ config = {} }) {
 
     setActiveFlowId(item.id);
 
-    if (item.id !== "quote") setQuoteSelections(INITIAL_QUOTE);
-    if (item.id !== "schedule") setCallSelections(INITIAL_CALL);
+    if (item.id !== "quote") setQuoteSelections(initialQuote);
+    if (item.id !== "schedule") setCallSelections(initialCall);
     if (item.id !== "ask") {
       setAskQuestion("");
       setHasTypedQuestion(false);
     }
 
-    if (foundUserData && formData.name === "") {
-      setFormData({
-        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
-        email: foundUserData.email || "",
-        phone: foundUserData.phone || "",
-      });
-    }
+    syncKnownUserIntoForm();
   };
 
   const handleBackToMainMenu = () => {
     saveConversationMessage("Back to Main Menu", "user");
     setActiveFlowId(null);
-    setQuoteSelections(INITIAL_QUOTE);
-    setCallSelections(INITIAL_CALL);
+    setQuoteSelections(initialQuote);
+    setCallSelections(initialCall);
     setAskQuestion("");
     setHasTypedQuestion(false);
-
-    if (foundUserData && formData.name === "") {
-      setFormData({
-        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
-        email: foundUserData.email || "",
-        phone: foundUserData.phone || "",
-      });
-    }
+    syncKnownUserIntoForm();
   };
 
   const handleServiceSelect = (label) => {
@@ -333,6 +323,19 @@ export default function ChatBox({ config = {} }) {
     saveConversationMessage(`Industry: ${project.label}`, "user");
     openLink(project.url);
   };
+
+const handleSelectGuide = (guide) => {
+  if (!guide) return;
+
+  saveConversationMessage(`Guide: ${guide.label}`, "user");
+
+  const clientKey = mergedConfig?.clientKey || "robin-run";
+  const surveyKey =
+    guide?.id || mergedConfig?.survey?.defaultSurveyKey || "senior-living";
+
+  openLink(`/assessments/${clientKey}/${surveyKey}`);
+};
+
 
   const handleSelectProjectType = (option) => {
     saveConversationMessage(`Quote - Project Type: ${option}`, "user");
@@ -372,13 +375,13 @@ export default function ChatBox({ config = {} }) {
 
   const resetAllFlows = () => {
     setActiveFlowId(null);
-    setQuoteSelections(INITIAL_QUOTE);
-    setCallSelections(INITIAL_CALL);
+    setQuoteSelections(initialQuote);
+    setCallSelections(initialCall);
     setAskQuestion("");
     setHasTypedQuestion(false);
 
     if (!foundUserData) {
-      setFormData(INITIAL_FORM);
+      setFormData(initialForm);
     } else {
       setFormData({
         name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
@@ -409,10 +412,7 @@ export default function ChatBox({ config = {} }) {
 
       if (foundUserData) {
         const leadId = foundUserData?.id;
-
-        if (!leadId) {
-          throw new Error("Lead ID not found in user data");
-        }
+        if (!leadId) throw new Error("Lead ID not found in user data");
 
         const conversationPayload = {
           leadId,
@@ -519,7 +519,6 @@ export default function ChatBox({ config = {} }) {
   };
 
   const showMainMenuButtons = !activeFlowId;
-
   const showQuoteSection = activeFlowId === "quote";
   const showScheduleSection = activeFlowId === "schedule";
   const showAskSection = activeFlowId === "ask";
@@ -534,11 +533,8 @@ export default function ChatBox({ config = {} }) {
 
   const showQuoteForm = showQuoteSection && quoteHasAll && !foundUserData;
   const showQuoteSubmit = showQuoteSection && quoteHasAll && !!foundUserData;
-
   const showScheduleForm = showScheduleSection && callHasBoth && !foundUserData;
-  const showScheduleSubmit =
-    showScheduleSection && callHasBoth && !!foundUserData;
-
+  const showScheduleSubmit = showScheduleSection && callHasBoth && !!foundUserData;
   const showAskForm = showAskSection && hasTypedQuestion && !foundUserData;
   const showAskSubmit = showAskSection && hasTypedQuestion && !!foundUserData;
 
@@ -549,10 +545,10 @@ export default function ChatBox({ config = {} }) {
     quoteCfg,
     scheduleCfg,
     askCfg,
-    quoteProjectTypes: QUOTE_PROJECT_TYPES,
-    quoteClientTypes: QUOTE_CLIENT_TYPES,
-    quoteTimelines: QUOTE_TIMELINES,
-    callTimeSlots: CALL_TIME_SLOTS,
+    quoteProjectTypes,
+    quoteClientTypes,
+    quoteTimelines,
+    callTimeSlots,
   };
 
   const flowState = {
@@ -577,6 +573,7 @@ export default function ChatBox({ config = {} }) {
   const flowHandlers = {
     handleServiceSelect,
     handleProjectSelect,
+    handleSelectGuide,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,

@@ -22,6 +22,10 @@ const itanexConfig = {
     launcherAccent: "#16335b",
   },
 
+    survey: {
+    enabled: false,
+  },
+
   mainMenu: [
     {
       id: "schedule",

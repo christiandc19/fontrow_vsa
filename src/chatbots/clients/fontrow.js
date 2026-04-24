@@ -22,6 +22,10 @@ const fontrowConfig = {
     launcherAccent: "#000000",
   },
 
+    survey: {
+    enabled: false,
+  },
+
   mainMenu: [
     {
       id: "projects",
@@ -40,6 +44,7 @@ const fontrowConfig = {
       type: "link",
       url: "https://fontrow.com/contact",
     },
+
     {
       id: "ask",
       label: "Ask Us A Question",

@@ -4,6 +4,8 @@ import ProjectsFlow from "./flows/ProjectsFlow";
 import QuoteFlow from "./flows/QuoteFlow";
 import ScheduleFlow from "./flows/ScheduleFlow";
 import AskFlow from "./flows/AskFlow";
+import GuideFlow from "./flows/GuideFlow";
+import LivingOptionsFlow from "./flows/LivingOptionsFlow";
 
 export default function FlowRenderer({
   activeFlowId,
@@ -48,6 +50,7 @@ export default function FlowRenderer({
   const {
     handleServiceSelect,
     handleProjectSelect,
+    handleSelectGuide,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -76,6 +79,9 @@ export default function FlowRenderer({
           onSelect={handleProjectSelect}
         />
       );
+
+    case "survey":
+      return <GuideFlow onSelectGuide={handleSelectGuide} />;
 
     case "quote":
       return (
@@ -131,6 +137,16 @@ export default function FlowRenderer({
           isSubmittingLead={isSubmittingLead}
         />
       );
+
+
+    case "living-options":
+      return (
+        <LivingOptionsFlow
+          config={mergedConfig}
+        />
+      );
+
+
 
     default:
       return null;
