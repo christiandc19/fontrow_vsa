@@ -2,7 +2,7 @@ const robinRunConfig = {
   clientKey: "robin-run",
   communityName: "Robin Run Village",
 
-  logoUrl: "/images/clients/robin-run/robin-run-logo.webp",
+  logoUrl: "https://cdn.websmartassistant.com/clients/robin-run/robin-run-logo.webp",
 
   headerTitle: "Chat with Robin Run Village",
   headerSubtitle: "We’re here to help you explore senior living options.",
