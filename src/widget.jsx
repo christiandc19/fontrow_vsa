@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import ChatBox from "./components/ChatBox/ChatBox";
 import "./components/ChatBox/ChatBox.css";
 
@@ -12,5 +13,10 @@ window.WebSmartAssistant = function (config = {}) {
   document.body.appendChild(container);
 
   const root = ReactDOM.createRoot(container);
-  root.render(<ChatBox config={config} />);
+
+  root.render(
+    <MemoryRouter>
+      <ChatBox config={config} />
+    </MemoryRouter>
+  );
 };
