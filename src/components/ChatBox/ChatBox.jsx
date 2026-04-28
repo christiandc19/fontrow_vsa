@@ -69,16 +69,54 @@ export default function ChatBox({ config = {} }) {
     mergedConfig?.launcherSubtitle || "Chat with our team";
 
   const theme = mergedConfig?.theme || {};
-  const themeVars = {
-    "--chat-primary": theme.primary || "#935135",
-    "--chat-primary-hover": theme.primaryHover || "#7c402c",
-    "--chat-header-bg": theme.headerBg || "#fcf8ec",
-    "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
-    "--chat-user-bubble-bg": theme.userBubbleBg || "#935135",
-    "--chat-text-dark": theme.textDark || "#333333",
-    "--chat-launcher-bg": theme.launcherBg || "#ffffff",
-    "--chat-launcher-accent": theme.launcherAccent || "#16335b",
-  };
+
+// THEME COLORS
+
+const themeVars = {
+  "--chat-primary": theme.primary || "#935135",
+  "--chat-primary-hover": theme.primaryHover || "#7c402c",
+  "--chat-accent": theme.accent || theme.launcherAccent || theme.primary || "#16335b",
+
+  "--chat-header-bg": theme.headerBg || "#fcf8ec",
+  "--chat-header-text": theme.headerText || theme.textDark || "#333333",
+  "--chat-header-subtitle": theme.headerSubtitle || theme.textMuted || theme.textDark || "#555555",
+
+  "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
+  "--chat-bot-bubble-text": theme.botBubbleText || theme.textDark || "#333333",
+
+  "--chat-user-bubble-bg": theme.userBubbleBg || theme.primary || "#935135",
+  "--chat-user-bubble-text": theme.userBubbleText || "#ffffff",
+
+  "--chat-text-dark": theme.textDark || "#333333",
+  "--chat-text-light": theme.textLight || "#ffffff",
+  "--chat-text-muted": theme.textMuted || "#666666",
+
+  "--chat-launcher-bg": theme.launcherBg || "#ffffff",
+  "--chat-launcher-text": theme.launcherText || theme.textDark || "#333333",
+  "--chat-launcher-subtitle": theme.launcherSubtitle || theme.textMuted || "#666666",
+  "--chat-launcher-accent": theme.launcherAccent || theme.primary || "#16335b",
+
+  "--chat-button-bg": theme.buttonBg || "#ffffff",
+  "--chat-button-text": theme.buttonText || theme.textDark || "#333333",
+  "--chat-button-border": theme.buttonBorder || "#dddddd",
+  "--chat-button-active-bg": theme.buttonActiveBg || theme.primary || "#935135",
+  "--chat-button-active-text": theme.buttonActiveText || "#ffffff",
+
+  "--chat-back-button-bg": theme.backButtonBg || "#f3f4f6",
+  "--chat-back-button-text": theme.backButtonText || theme.textDark || "#333333",
+  "--chat-back-button-hover-bg": theme.backButtonHoverBg || theme.primaryHover || "#e5e7eb",
+
+  "--chat-calendar-bg": theme.calendarBg || "#ffffff",
+  "--chat-calendar-text": theme.calendarText || theme.textDark || "#333333",
+  "--chat-calendar-muted-text": theme.calendarMutedText || theme.textMuted || "#999999",
+
+  "--chat-input-bg": theme.inputBg || "#ffffff",
+  "--chat-input-text": theme.inputText || theme.textDark || "#333333",
+  "--chat-input-border": theme.inputBorder || "#dddddd",
+};
+
+
+  // END OF THEMES
 
   const mainMenu = Array.isArray(mergedConfig?.mainMenu)
     ? mergedConfig.mainMenu

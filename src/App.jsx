@@ -6,10 +6,11 @@ import {
   useLocation,
 } from "react-router-dom";
 import ChatBox from "./components/ChatBox/ChatBox.jsx";
-import RobinRun from "./chatbots/clients/robinRun.js";
 import Survey from "./components/Survey/Survey";
 import SurveyEmbed from "./components/SurveyEmbed/SurveyEmbed";
+import RobinRun from "./chatbots/clients/robinRun.js";
 // import FontRow from "./chatbots/clients/fontrow.js";
+// import smartWebAssistant from "./chatbots/clients/wsa.js";
 
 
 function AppContent() {
@@ -35,6 +36,9 @@ function AppContent() {
       </Routes>
 
       {!isAssessmentPage && <ChatBox config={RobinRun} />}
+      {/* {!isAssessmentPage && <ChatBox config={FontRow} />} */}
+      {/* {!isAssessmentPage && <ChatBox config={smartWebAssistant} />} */}
+
     </div>
   );
 }
