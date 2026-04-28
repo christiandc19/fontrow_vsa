@@ -14,12 +14,13 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build:cra": "react-scripts build",
-    "build:widget": "vite build",
-    "preview:widget": "vite preview"
-  },
+"scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "build:cra": "react-scripts build",
+  "build:widget": "vite build",
+  "preview:widget": "vite preview"
+},
   "eslintConfig": {
     "extends": [
       "react-app",
