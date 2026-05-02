@@ -1,5 +1,5 @@
 const smartWebAssistantConfig = {
-  clientKey: "smart-webassistant",
+  clientKey: "web-smart-assistant",
 
   // ✅ New naming (backward-compatible handled in ChatBox)
   clientName: "Web Smart Assistant",
