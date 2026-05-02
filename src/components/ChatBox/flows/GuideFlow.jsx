@@ -22,7 +22,7 @@ export default function GuideFlow({ config, onSelectGuide }) {
     ];
 
   const handleGuideClick = (guide) => {
-    // Smart WebAssistant/product clients: open URL
+    // Web Smart Assistant/product clients: open URL
     if (guide.url) {
       window.location.href = guide.url;
       return;

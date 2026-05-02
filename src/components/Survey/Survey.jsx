@@ -7,6 +7,7 @@ import LeadCaptureScreen from "./components/LeadCaptureScreen";
 import { getClientConfig } from "../../chatbots/registry";
 import { getSurvey } from "./config/surveys";
 import { getSurveyResult } from "./utils/surveyUtils";
+import SurveyQuestionLayout from "./components/SurveyQuestionLayout";
 import "./Survey.css";
 
 const STORAGE_PREFIX = "wsa-survey-state";
@@ -191,14 +192,18 @@ export default function Survey() {
     navigate(`/assessments/${resolvedClientKey}/${resolvedSurveyKey}/start`);
   };
 
-  const handleAnswer = (question, value) => {
-    if (!question) return;
+const handleAnswer = (question, value) => {
+  if (!question) return;
 
-    setAnswers((prev) => ({
-      ...prev,
-      [question.id]: value,
-    }));
-  };
+  const selectedOption = question.options.find(
+    (opt) => opt.value === value
+  );
+
+  setAnswers((prev) => ({
+    ...prev,
+    [question.id]: selectedOption,
+  }));
+};
 
   const handleBack = () => {
     if (currentIndex > 0 && currentIndex <= totalSteps) {
@@ -336,17 +341,15 @@ export default function Survey() {
     return (
       <>
         {timeoutWarning}
-        <QuestionScreen
-          question={currentQuestion}
-          currentStep={currentIndex + 1}
-          totalSteps={totalSteps}
-          answers={answers}
-          onSelect={handleAnswer}
-          onBack={handleBack}
-          onNext={handleNext}
-          surveyTitle={survey.landing.title}
-          clientLogo={client?.survey?.branding?.logo || client?.logoUrl}
-        />
+        <SurveyQuestionLayout
+          title={client?.communityName || "Assessment"}
+        subtitle={`Step ${currentIndex + 1} of ${totalSteps}`}
+        question={currentQuestion?.question}
+        options={currentQuestion?.options || []}
+        selected={answers[currentQuestion?.id]?.value}
+        onSelect={(val) => handleAnswer(currentQuestion, val)}
+        onNext={handleNext}
+      />
       </>
     );
   }
