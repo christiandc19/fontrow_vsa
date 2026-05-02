@@ -6,10 +6,12 @@ import {
   useLocation,
 } from "react-router-dom";
 import ChatBox from "./components/ChatBox/ChatBox.jsx";
-import RobinRun from "./chatbots/clients/robinRun.js";
 import Survey from "./components/Survey/Survey";
 import SurveyEmbed from "./components/SurveyEmbed/SurveyEmbed";
+import ToolsHome from "./components/ToolsHome/ToolsHome";
+import SurveyHub from "./components/Survey/SurveyHub";// import RobinRun from "./chatbots/clients/robinRun.js";
 // import FontRow from "./chatbots/clients/fontrow.js";
+import smartWebAssistant from "./chatbots/clients/wsa.js";
 
 
 function AppContent() {
@@ -19,11 +21,10 @@ function AppContent() {
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<div />} />
-        <Route
-          path="/assessments/:clientKey/:surveyKey"
-          element={<Survey />}
+        <Route path="/" element={<ToolsHome />} />        
+        <Route path="/assessments/:clientKey/:surveyKey" element={<Survey />}
         />
+        <Route path="/assessments" element={<SurveyHub />} />
         <Route
           path="/assessments/:clientKey/:surveyKey/start"
           element={<Survey />}
@@ -34,7 +35,10 @@ function AppContent() {
         />
       </Routes>
 
-      {!isAssessmentPage && <ChatBox config={RobinRun} />}
+      {/* {!isAssessmentPage && <ChatBox config={RobinRun} />} */}
+      {/* {!isAssessmentPage && <ChatBox config={FontRow} />} */}
+      {!isAssessmentPage && <ChatBox config={smartWebAssistant} />}
+
     </div>
   );
 }

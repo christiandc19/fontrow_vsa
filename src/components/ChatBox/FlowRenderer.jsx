@@ -81,7 +81,12 @@ export default function FlowRenderer({
       );
 
     case "survey":
-      return <GuideFlow onSelectGuide={handleSelectGuide} />;
+      return (
+        <GuideFlow
+          config={mergedConfig}
+          onSelectGuide={handleSelectGuide}
+        />
+      );
 
     case "quote":
       return (
