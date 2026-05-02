@@ -1,0 +1,30 @@
+.survey-step-page {
+  padding: 40px;
+  font-family: Arial, sans-serif;
+}
+
+.survey-options {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option {
+  padding: 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.option.selected {
+  border-color: teal;
+}
+
+.next-btn {
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: teal;
+  color: white;
+  border: none;
+}

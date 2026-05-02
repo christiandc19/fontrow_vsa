@@ -1,0 +1,140 @@
+.tools-home {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f7f7f5;
+  position: relative;
+  font-family: inherit;
+}
+
+.tools-home-left {
+  position: relative;
+  background-image: url("../../../public/images/senior-bg.webp");
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 80px;
+}
+
+.tools-home-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 94, 104, 0.78);
+}
+
+.tools-home-content {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.tools-home-logo {
+  width: 120px;
+  margin-bottom: 70px;
+}
+
+.tools-home-content h1 {
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 1.05;
+  margin: 0 0 24px;
+}
+
+.tools-home-content p {
+  font-size: 22px;
+  line-height: 1.5;
+  margin-bottom: 36px;
+}
+
+.tools-home-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #0f5e68;
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 18px 58px;
+  border-radius: 999px;
+}
+
+.tools-home-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
+}
+
+.tools-home-info {
+  max-width: 620px;
+}
+
+.tools-home-kicker {
+  font-size: 22px;
+  margin-bottom: 46px;
+  color: #333;
+}
+
+.tools-home-feature {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 24px;
+  margin-bottom: 42px;
+  align-items: start;
+}
+
+.tools-home-feature span {
+  font-size: 42px;
+  color: #0f7a8a;
+}
+
+.tools-home-feature h3 {
+  text-transform: uppercase;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+  color: #263238;
+}
+
+.tools-home-feature p {
+  margin: 0;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.tools-home-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #777;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+@media (max-width: 900px) {
+  .tools-home {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-home-left,
+  .tools-home-right {
+    padding: 48px 24px;
+  }
+
+  .tools-home-logo {
+    margin-bottom: 40px;
+  }
+
+  .tools-home-footer {
+    position: static;
+    flex-direction: column;
+    gap: 8px;
+  }
+}

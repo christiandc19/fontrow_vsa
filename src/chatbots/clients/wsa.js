@@ -4,14 +4,14 @@ const smartWebAssistantConfig = {
   // ✅ New naming (backward-compatible handled in ChatBox)
   clientName: "Smart WebAssistant",
 
-  logoUrl: "https://cdn.websmartassistant.com/clients/smart-webassistant/logo.webp",
+  logoUrl: "https://cdn.websmartassistant.com/clients/smart-web-assistant/logo-bubble.png",
 
   headerTitle: "Chat with Smart WebAssistant",
   headerSubtitle: "Chatbots, surveys, and lead tools for modern websites.",
   welcomeMessage:
     "Hi there! I can help you explore Smart WebAssistant — our chatbot, survey, and lead engagement tools.",
 
-  launcherTitle: "Smart WebAssistant",
+  launcherTitle: "Smart Web Assistant",
   launcherSubtitle: "Explore our tools",
 
   // 🔥 DARK PREMIUM THEME
