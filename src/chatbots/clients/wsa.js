@@ -2,16 +2,16 @@ const smartWebAssistantConfig = {
   clientKey: "smart-webassistant",
 
   // ✅ New naming (backward-compatible handled in ChatBox)
-  clientName: "Smart WebAssistant",
+  clientName: "Web Smart Assistant",
 
   logoUrl: "https://cdn.websmartassistant.com/clients/smart-web-assistant/logo-bubble.png",
 
-  headerTitle: "Chat with Smart WebAssistant",
+  headerTitle: "Chat with Web Smart Assistant",
   headerSubtitle: "Chatbots, surveys, and lead tools for modern websites.",
   welcomeMessage:
-    "Hi there! I can help you explore Smart WebAssistant — our chatbot, survey, and lead engagement tools.",
+    "Hi there! I can help you explore Web Smart Assistant — our chatbot, survey, and lead engagement tools.",
 
-  launcherTitle: "Smart Web Assistant",
+  launcherTitle: "Web Smart Assistant",
   launcherSubtitle: "Explore our tools",
 
   // 🔥 DARK PREMIUM THEME
@@ -146,7 +146,7 @@ theme: {
   // 📅 BOOK A CALL (replaces schedule)
   // ⚠️ Keep key as "schedule" if your ChatBox depends on it
   schedule: {
-    intro: "Let’s schedule a quick call to see if Smart WebAssistant is a good fit.",
+    intro: "Let’s schedule a quick call to see if Web Smart Assistant is a good fit.",
     q1: "What day works best for your call?",
     q2: "What time works best?",
     contactPrompt: "Share your contact details and we’ll confirm the call.",
@@ -164,7 +164,7 @@ theme: {
 
   // 💬 ASK FLOW
   ask: {
-    q1: "What would you like to know about Smart WebAssistant?",
+    q1: "What would you like to know about Web Smart Assistant?",
     placeholder:
       "Ex: chatbot setup, surveys, pricing, integrations, demos…",
     contactPrompt:
