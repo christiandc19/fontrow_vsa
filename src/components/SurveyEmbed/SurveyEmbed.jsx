@@ -70,8 +70,10 @@ export default function SurveyEmbed({
 
         {/* RIGHT IMAGE */}
         <div className="wsa-survey-embed-image">
-          <img src={heroImage} alt="Survey visual" />
-        </div>
+            <img
+              src="https://cdn.websmartassistant.com/widget/v1.8/images/senior-living-survey-hero.webp"
+              alt="Senior living assessment"
+/>        </div>
 
       </div>
     </section>
