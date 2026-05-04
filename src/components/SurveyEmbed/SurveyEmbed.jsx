@@ -14,7 +14,7 @@ const defaultContent = {
     subtitle:
       "Learn about your options and get personalized guidance with this quick assessment.",
     image:
-      "https://cdn.websmartassistant.com/widget/v1.8.7/images/senior-living-survey-hero.webp",
+      "https://cdn.websmartassistant.com/widget/v1.8.8/images/senior-living-survey-hero.webp",
     alt: "Senior living assessment",
   },
   downsizing: {
@@ -22,7 +22,7 @@ const defaultContent = {
     subtitle:
       "Explore whether simplifying the home and daily responsibilities may be helpful.",
     image:
-      "https://cdn.websmartassistant.com/widget/v1.8.7/images/downsizing-survey-hero.webp",
+      "https://cdn.websmartassistant.com/widget/v1.8.8/images/downsizing-survey-hero.webp",
     alt: "Downsizing assessment",
   },
   "memory-support": {
@@ -30,7 +30,7 @@ const defaultContent = {
     subtitle:
       "Answer a few quick questions to better understand whether memory support may be helpful.",
       image:
-      "https://cdn.websmartassistant.com/widget/v1.8.7/images/memory-survey-hero.webp",
+      "https://cdn.websmartassistant.com/widget/v1.8.8/images/memory-survey-hero.webp",
     alt: "Memory support assessment",
   },
   affordability: {
@@ -38,7 +38,7 @@ const defaultContent = {
     subtitle:
       "Get guidance around planning, budgeting, and comparing senior living options.",
     image:
-    "https://cdn.websmartassistant.com/widget/v1.8.7/images/affordability-survey-hero.webp",
+    "https://cdn.websmartassistant.com/widget/v1.8.8/images/affordability-survey-hero.webp",
   },
 };
 
