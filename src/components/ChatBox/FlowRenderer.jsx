@@ -5,7 +5,7 @@ import QuoteFlow from "./flows/QuoteFlow";
 import ScheduleFlow from "./flows/ScheduleFlow";
 import AskFlow from "./flows/AskFlow";
 import GuideFlow from "./flows/GuideFlow";
-import LivingOptionsFlow from "./flows/LivingOptionsFlow";
+import OptionsFlow from "./flows/OptionsFlow";
 
 export default function FlowRenderer({
   activeFlowId,
@@ -82,10 +82,7 @@ export default function FlowRenderer({
 
     case "survey":
       return (
-        <GuideFlow
-          config={mergedConfig}
-          onSelectGuide={handleSelectGuide}
-        />
+        <GuideFlow config={mergedConfig} onSelectGuide={handleSelectGuide} />
       );
 
     case "quote":
@@ -109,6 +106,7 @@ export default function FlowRenderer({
       );
 
     case "schedule":
+    case "demo":
       return (
         <ScheduleFlow
           scheduleCfg={scheduleCfg}
@@ -143,15 +141,8 @@ export default function FlowRenderer({
         />
       );
 
-
-    case "living-options":
-      return (
-        <LivingOptionsFlow
-          config={mergedConfig}
-        />
-      );
-
-
+    case "options":
+      return <OptionsFlow config={mergedConfig} />;
 
     default:
       return null;

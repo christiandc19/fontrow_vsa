@@ -343,13 +343,31 @@ const handleAnswer = (question, value) => {
         {timeoutWarning}
         <SurveyQuestionLayout
           title={client?.communityName || "Assessment"}
-        subtitle={`Step ${currentIndex + 1} of ${totalSteps}`}
-        question={currentQuestion?.question}
-        options={currentQuestion?.options || []}
-        selected={answers[currentQuestion?.id]?.value}
-        onSelect={(val) => handleAnswer(currentQuestion, val)}
-        onNext={handleNext}
-      />
+          subtitle={`Step ${currentIndex + 1} of ${totalSteps}`}
+          section={currentQuestion?.section}
+          question={
+            typeof currentQuestion?.title === "object"
+              ? currentQuestion.title[answers?.whoFor?.value] ||
+                currentQuestion.title.someoneElse
+              : currentQuestion?.title
+          }
+          intro={
+            typeof currentQuestion?.intro === "object"
+              ? currentQuestion.intro[answers?.whoFor?.value] ||
+                currentQuestion.intro.someoneElse
+              : currentQuestion?.intro
+          }
+          helperSubtitle={currentQuestion?.subtitle}
+          options={currentQuestion?.options || []}
+          selected={answers[currentQuestion?.id]?.value}
+          onSelect={(val) => handleAnswer(currentQuestion, val)}
+          onNext={handleNext}
+          onBack={handleBack}
+          currentStep={currentIndex + 1}
+          totalSteps={totalSteps}
+          showBack={currentIndex > 0}
+          help={currentQuestion?.help}
+        />
       </>
     );
   }

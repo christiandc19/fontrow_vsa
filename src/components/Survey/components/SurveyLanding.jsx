@@ -8,12 +8,22 @@ export default function SurveyLanding({
   client,
   surveyKey,
 }) {
+
   const surveyBranding = client?.survey?.branding || {};
   const surveyLanding = client?.survey?.landing || {};
 
+  const defaultSurveyImages = {
+    "senior-living": "/images/surveys/senior-living.webp",
+    downsizing: "/images/surveys/downsizing.webp",
+    "memory-support": "/images/surveys/memory-support.webp",
+    affordability: "/images/surveys/affordability.webp",
+  };
+
   const heroImage =
     surveyBranding.heroImages?.[surveyKey] ||
-    surveyBranding.heroImage;
+    surveyBranding.heroImage ||
+    defaultSurveyImages[surveyKey] ||
+    "/images/surveys/default-hero.webp";
 
   const overlayColor =
     surveyBranding.overlayColor || "rgba(15, 94, 104, 0.55)";

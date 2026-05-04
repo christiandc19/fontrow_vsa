@@ -10,13 +10,15 @@ import MainMenuBubbleNav from "./MainMenuBubbleNav";
 import MainMenuButtons from "./MainMenuButtons";
 import FlowRenderer from "./FlowRenderer";
 
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
-  ? import.meta.env.VITE_API_URL
-  : process.env.REACT_APP_API_URL;
+const API_BASE =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : process.env.REACT_APP_API_URL;
 
-const API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CHATBOT_API_KEY)
-  ? import.meta.env.VITE_CHATBOT_API_KEY
-  : process.env.REACT_APP_CHATBOT_API_KEY;
+const API_KEY =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_CHATBOT_API_KEY
+    ? import.meta.env.VITE_CHATBOT_API_KEY
+    : process.env.REACT_APP_CHATBOT_API_KEY;
 
 const authHeaders = {
   "Content-Type": "application/json",
@@ -27,7 +29,9 @@ const getBotConfig = (clientKey) => getClientConfig(clientKey) || {};
 
 const formatDateLabel = (iso) => {
   if (!iso) return "";
+
   const d = new Date(iso);
+
   return d.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -50,12 +54,11 @@ export default function ChatBox({ config = {} }) {
   const logoUrl = mergedConfig?.logoUrl || null;
 
   const headerTitle =
-    mergedConfig?.headerTitle ||
-    `Chat with ${mergedConfig?.communityName || ""}`.trim() ||
-    "Chat with us";
+    mergedConfig?.headerTitle ??
+    (`Chat with ${mergedConfig?.communityName || ""}`.trim() || "Chat with us");
 
   const headerSubtitle =
-    mergedConfig?.headerSubtitle || "We’re here to help you explore options.";
+    mergedConfig?.headerSubtitle ?? "We’re here to help you explore options.";
 
   const welcomeMessage =
     mergedConfig?.welcomeMessage || "How can I help you today?";
@@ -70,53 +73,59 @@ export default function ChatBox({ config = {} }) {
 
   const theme = mergedConfig?.theme || {};
 
-// THEME COLORS
+  const themeVars = {
+    "--chat-primary": theme.primary || "#935135",
+    "--chat-primary-hover": theme.primaryHover || "#7c402c",
+    "--chat-accent":
+      theme.accent || theme.launcherAccent || theme.primary || "#16335b",
 
-const themeVars = {
-  "--chat-primary": theme.primary || "#935135",
-  "--chat-primary-hover": theme.primaryHover || "#7c402c",
-  "--chat-accent": theme.accent || theme.launcherAccent || theme.primary || "#16335b",
+    "--chat-header-bg": theme.headerBg || "#fcf8ec",
+    "--chat-header-text": theme.headerText || theme.textDark || "#333333",
+    "--chat-header-subtitle":
+      theme.headerSubtitle || theme.textMuted || theme.textDark || "#555555",
 
-  "--chat-header-bg": theme.headerBg || "#fcf8ec",
-  "--chat-header-text": theme.headerText || theme.textDark || "#333333",
-  "--chat-header-subtitle": theme.headerSubtitle || theme.textMuted || theme.textDark || "#555555",
+    "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
+    "--chat-bot-bubble-text":
+      theme.botBubbleText || theme.textDark || "#333333",
 
-  "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
-  "--chat-bot-bubble-text": theme.botBubbleText || theme.textDark || "#333333",
+    "--chat-user-bubble-bg":
+      theme.userBubbleBg || theme.primary || "#935135",
+    "--chat-user-bubble-text": theme.userBubbleText || "#ffffff",
 
-  "--chat-user-bubble-bg": theme.userBubbleBg || theme.primary || "#935135",
-  "--chat-user-bubble-text": theme.userBubbleText || "#ffffff",
+    "--chat-text-dark": theme.textDark || "#333333",
+    "--chat-text-light": theme.textLight || "#ffffff",
+    "--chat-text-muted": theme.textMuted || "#666666",
 
-  "--chat-text-dark": theme.textDark || "#333333",
-  "--chat-text-light": theme.textLight || "#ffffff",
-  "--chat-text-muted": theme.textMuted || "#666666",
+    "--chat-launcher-bg": theme.launcherBg || "#ffffff",
+    "--chat-launcher-text":
+      theme.launcherText || theme.textDark || "#333333",
+    "--chat-launcher-subtitle":
+      theme.launcherSubtitle || theme.textMuted || "#666666",
+    "--chat-launcher-accent":
+      theme.launcherAccent || theme.primary || "#16335b",
 
-  "--chat-launcher-bg": theme.launcherBg || "#ffffff",
-  "--chat-launcher-text": theme.launcherText || theme.textDark || "#333333",
-  "--chat-launcher-subtitle": theme.launcherSubtitle || theme.textMuted || "#666666",
-  "--chat-launcher-accent": theme.launcherAccent || theme.primary || "#16335b",
+    "--chat-button-bg": theme.buttonBg || "#ffffff",
+    "--chat-button-text": theme.buttonText || theme.textDark || "#333333",
+    "--chat-button-border": theme.buttonBorder || "#dddddd",
+    "--chat-button-active-bg":
+      theme.buttonActiveBg || theme.primary || "#935135",
+    "--chat-button-active-text": theme.buttonActiveText || "#ffffff",
 
-  "--chat-button-bg": theme.buttonBg || "#ffffff",
-  "--chat-button-text": theme.buttonText || theme.textDark || "#333333",
-  "--chat-button-border": theme.buttonBorder || "#dddddd",
-  "--chat-button-active-bg": theme.buttonActiveBg || theme.primary || "#935135",
-  "--chat-button-active-text": theme.buttonActiveText || "#ffffff",
+    "--chat-back-button-bg": theme.backButtonBg || "#f3f4f6",
+    "--chat-back-button-text":
+      theme.backButtonText || theme.textDark || "#333333",
+    "--chat-back-button-hover-bg":
+      theme.backButtonHoverBg || theme.primaryHover || "#e5e7eb",
 
-  "--chat-back-button-bg": theme.backButtonBg || "#f3f4f6",
-  "--chat-back-button-text": theme.backButtonText || theme.textDark || "#333333",
-  "--chat-back-button-hover-bg": theme.backButtonHoverBg || theme.primaryHover || "#e5e7eb",
+    "--chat-calendar-bg": theme.calendarBg || "#ffffff",
+    "--chat-calendar-text": theme.calendarText || theme.textDark || "#333333",
+    "--chat-calendar-muted-text":
+      theme.calendarMutedText || theme.textMuted || "#999999",
 
-  "--chat-calendar-bg": theme.calendarBg || "#ffffff",
-  "--chat-calendar-text": theme.calendarText || theme.textDark || "#333333",
-  "--chat-calendar-muted-text": theme.calendarMutedText || theme.textMuted || "#999999",
-
-  "--chat-input-bg": theme.inputBg || "#ffffff",
-  "--chat-input-text": theme.inputText || theme.textDark || "#333333",
-  "--chat-input-border": theme.inputBorder || "#dddddd",
-};
-
-
-  // END OF THEMES
+    "--chat-input-bg": theme.inputBg || "#ffffff",
+    "--chat-input-text": theme.inputText || theme.textDark || "#333333",
+    "--chat-input-border": theme.inputBorder || "#dddddd",
+  };
 
   const mainMenu = Array.isArray(mergedConfig?.mainMenu)
     ? mergedConfig.mainMenu
@@ -131,29 +140,24 @@ const themeVars = {
     : [];
 
   const quoteCfg = mergedConfig?.quote || {};
-  const scheduleCfg = mergedConfig?.schedule || {};
   const askCfg = mergedConfig?.ask || {};
 
   const quoteProjectTypes = quoteCfg.projectTypes || [];
   const quoteClientTypes = quoteCfg.clientTypes || [];
   const quoteTimelines = quoteCfg.timelines || [];
 
-  const callTimeSlots = scheduleCfg.timeSlots || [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-  ];
-
   const initialForm = { name: "", email: "", phone: "" };
+
   const initialQuote = {
     projectType: null,
     clientType: null,
     timeline: null,
   };
-  const initialCall = { date: null, time: null };
+
+  const initialCall = {
+    date: null,
+    time: null,
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const [launcherMode, setLauncherMode] = useState("hidden");
@@ -168,6 +172,23 @@ const themeVars = {
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
   const [pendingConversations, setPendingConversations] = useState([]);
+
+  const isSchedulingFlow =
+    activeFlowId === "schedule" || activeFlowId === "demo";
+
+  const scheduleCfg =
+    activeFlowId === "demo"
+      ? mergedConfig?.demo || {}
+      : mergedConfig?.schedule || {};
+
+  const callTimeSlots = scheduleCfg.timeSlots || [
+    "9:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+  ];
 
   useEffect(() => {
     const circleTimer = setTimeout(() => {
@@ -278,6 +299,7 @@ const themeVars = {
 
   const openChat = async () => {
     setIsOpen(true);
+
     setMessages([
       {
         id: "welcome",
@@ -286,6 +308,7 @@ const themeVars = {
         isWelcome: true,
       },
     ]);
+
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
@@ -338,7 +361,11 @@ const themeVars = {
     setActiveFlowId(item.id);
 
     if (item.id !== "quote") setQuoteSelections(initialQuote);
-    if (item.id !== "schedule") setCallSelections(initialCall);
+
+    if (item.id !== "schedule" && item.id !== "demo") {
+      setCallSelections(initialCall);
+    }
+
     if (item.id !== "ask") {
       setAskQuestion("");
       setHasTypedQuestion(false);
@@ -373,18 +400,17 @@ const themeVars = {
     openLink(project.url);
   };
 
-const handleSelectGuide = (guide) => {
-  if (!guide) return;
+  const handleSelectGuide = (guide) => {
+    if (!guide) return;
 
-  saveConversationMessage(`Guide: ${guide.label}`, "user");
+    saveConversationMessage(`Guide: ${guide.label}`, "user");
 
-  const clientKey = mergedConfig?.clientKey || "robin-run";
-  const surveyKey =
-    guide?.id || mergedConfig?.survey?.defaultSurveyKey || "senior-living";
+    const currentClientKey = mergedConfig?.clientKey || "demo";
+    const surveyKey =
+      guide?.id || mergedConfig?.survey?.defaultSurveyKey || "senior-living";
 
-  openLink(`/assessments/${clientKey}/${surveyKey}`);
-};
-
+    openLink(`/assessments/${currentClientKey}/${surveyKey}`);
+  };
 
   const handleSelectProjectType = (option) => {
     saveConversationMessage(`Quote - Project Type: ${option}`, "user");
@@ -402,24 +428,32 @@ const handleSelectGuide = (guide) => {
   };
 
   const handleSelectCallDate = (isoDate) => {
-    saveConversationMessage(`Call - Date: ${isoDate}`, "user");
+    const label = activeFlowId === "demo" ? "Demo" : "Call";
+    saveConversationMessage(`${label} - Date: ${isoDate}`, "user");
     setCallSelections((prev) => ({ ...prev, date: isoDate }));
   };
 
   const handleSelectCallTime = (time) => {
-    saveConversationMessage(`Call - Time: ${time}`, "user");
+    const label = activeFlowId === "demo" ? "Demo" : "Call";
+    saveConversationMessage(`${label} - Time: ${time}`, "user");
     setCallSelections((prev) => ({ ...prev, time }));
   };
 
   const handleAskQuestionSubmit = (e) => {
     e.preventDefault();
+
     if (!askQuestion.trim()) return;
+
     setHasTypedQuestion(true);
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const resetAllFlows = () => {
@@ -442,6 +476,7 @@ const handleSelectGuide = (guide) => {
 
   const handleSubmitForm = async (e) => {
     if (e) e.preventDefault();
+
     setIsSubmittingLead(true);
 
     try {
@@ -451,6 +486,8 @@ const handleSelectGuide = (guide) => {
         conversationMessage = `Quote Request: ${JSON.stringify(quoteSelections)}`;
       } else if (activeFlowId === "schedule") {
         conversationMessage = `Call Request: ${callSelections.date} ${callSelections.time}`;
+      } else if (activeFlowId === "demo") {
+        conversationMessage = `Demo Request: ${callSelections.date} ${callSelections.time}`;
       } else if (activeFlowId === "ask") {
         conversationMessage = `Question: ${askQuestion}`;
       } else {
@@ -461,7 +498,10 @@ const handleSelectGuide = (guide) => {
 
       if (foundUserData) {
         const leadId = foundUserData?.id;
-        if (!leadId) throw new Error("Lead ID not found in user data");
+
+        if (!leadId) {
+          throw new Error("Lead ID not found in user data");
+        }
 
         const conversationPayload = {
           leadId,
@@ -484,6 +524,7 @@ const handleSelectGuide = (guide) => {
         const lastName = rest.join(" ");
 
         let userIP = null;
+
         try {
           const ipResponse = await fetch("https://api.ipify.org?format=json");
           const ipData = await ipResponse.json();
@@ -505,7 +546,10 @@ const handleSelectGuide = (guide) => {
           },
           conversations: [
             ...pendingConversations,
-            { message: conversationMessage, sender: "user" },
+            {
+              message: conversationMessage,
+              sender: "user",
+            },
           ],
           Details: {
             Ip: userIP,
@@ -517,6 +561,7 @@ const handleSelectGuide = (guide) => {
         await createLead(leadPayload);
 
         newUserData = await checkUserByIP(true);
+
         if (newUserData) {
           setFoundUserData(newUserData);
           setPendingConversations([]);
@@ -527,12 +572,10 @@ const handleSelectGuide = (guide) => {
 
       if (activeFlowId === "ask") {
         botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
-      } else if (
-        activeFlowId === "schedule" &&
-        callSelections.date &&
-        callSelections.time
-      ) {
-        botReply = `Thank you, ${formData.name}! We'll confirm your call on ${formatDateLabel(
+      } else if (isSchedulingFlow && callSelections.date && callSelections.time) {
+        const requestLabel = activeFlowId === "demo" ? "demo" : "call";
+
+        botReply = `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
           callSelections.date
         )} at ${callSelections.time}.`;
       } else {
@@ -554,6 +597,7 @@ const handleSelectGuide = (guide) => {
       resetAllFlows();
     } catch (err) {
       console.error("Submission failed:", err);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -569,7 +613,7 @@ const handleSelectGuide = (guide) => {
 
   const showMainMenuButtons = !activeFlowId;
   const showQuoteSection = activeFlowId === "quote";
-  const showScheduleSection = activeFlowId === "schedule";
+  const showScheduleSection = isSchedulingFlow;
   const showAskSection = activeFlowId === "ask";
 
   const quoteHasAll = !!(
@@ -582,8 +626,11 @@ const handleSelectGuide = (guide) => {
 
   const showQuoteForm = showQuoteSection && quoteHasAll && !foundUserData;
   const showQuoteSubmit = showQuoteSection && quoteHasAll && !!foundUserData;
+
   const showScheduleForm = showScheduleSection && callHasBoth && !foundUserData;
-  const showScheduleSubmit = showScheduleSection && callHasBoth && !!foundUserData;
+  const showScheduleSubmit =
+    showScheduleSection && callHasBoth && !!foundUserData;
+
   const showAskForm = showAskSection && hasTypedQuestion && !foundUserData;
   const showAskSubmit = showAskSection && hasTypedQuestion && !!foundUserData;
 
@@ -648,7 +695,11 @@ const handleSelectGuide = (guide) => {
           >
             <div className="chat-launcher-avatar-wrap">
               {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="chat-launcher-avatar" />
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  className="chat-launcher-avatar"
+                />
               ) : (
                 <div className="chat-launcher-avatar-fallback">C</div>
               )}
