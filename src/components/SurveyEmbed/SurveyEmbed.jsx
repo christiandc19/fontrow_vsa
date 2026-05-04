@@ -30,7 +30,7 @@ const defaultContent = {
     subtitle:
       "Answer a few quick questions to better understand whether memory support may be helpful.",
       image:
-        "https://cdn.websmartassistant.com/widget/v1.8.3/images/memory-survey-hero.webp",
+      "https://cdn.websmartassistant.com/widget/v1.8.6/images/memory-survey-hero.webp",
     alt: "Memory support assessment",
   },
   affordability: {
