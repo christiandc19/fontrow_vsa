@@ -8,6 +8,44 @@ export default function SurveyEmbed({
 }) {
   const client = getClientConfig(clientKey);
 
+const defaultContent = {
+  "senior-living": {
+    title: "Is Senior Living the Right Next Step?",
+    subtitle:
+      "Learn about your options and get personalized guidance with this quick assessment.",
+    image:
+      "https://cdn.websmartassistant.com/widget/v1.8.3/images/senior-living-survey-hero.webp",
+    alt: "Senior living assessment",
+  },
+  downsizing: {
+    title: "Would Downsizing Make Life Easier Right Now?",
+    subtitle:
+      "Explore whether simplifying the home and daily responsibilities may be helpful.",
+    image:
+      "https://cdn.websmartassistant.com/widget/v1.8.3/images/downsizing-survey-hero.webp",
+    alt: "Downsizing assessment",
+  },
+  "memory-support": {
+    title: "Could Memory Support Be the Right Next Step?",
+    subtitle:
+      "Answer a few quick questions to better understand whether memory support may be helpful.",
+    image:
+      "https://cdn.websmartassistant.com/widget/v1.8.3/images/memory-survey-hero.webp",
+    alt: "Memory support assessment",
+  },
+  affordability: {
+    title: "What Could Senior Living Cost for Your Situation?",
+    subtitle:
+      "Get guidance around planning, budgeting, and comparing senior living options.",
+    image:
+      "https://cdn.websmartassistant.com/widget/v1.8.3/images/affordability-survey-hero.webp",
+    alt: "Affordability assessment",
+  },
+};
+
+
+  const content = defaultContent[surveyKey] || defaultContent["senior-living"];
+
   const title =
     client?.survey?.embed?.[surveyKey]?.title || content.title;
 
@@ -31,43 +69,6 @@ export default function SurveyEmbed({
     "/images/surveys/senior-living-survey-hero.webp";
 
   const surveyUrl = `https://tools.websmartassistant.com/assessments/${clientKey}/${surveyKey}`;
-
-  const defaultContent = {
-    "senior-living": {
-      title: "Is Senior Living the Right Next Step?",
-      subtitle:
-        "Learn about your options and get personalized guidance with this quick assessment.",
-      image:
-        "https://cdn.websmartassistant.com/widget/v1.8.3/images/senior-living-survey-hero.webp",
-      alt: "Senior living assessment",
-    },
-    downsizing: {
-      title: "Would Downsizing Make Life Easier Right Now?",
-      subtitle:
-        "Explore whether simplifying the home and daily responsibilities may be helpful.",
-      image:
-        "https://cdn.websmartassistant.com/widget/v1.8.3/images/downsizing-survey-hero.webp",
-      alt: "Downsizing assessment",
-    },
-    "memory-support": {
-      title: "Could Memory Support Be the Right Next Step?",
-      subtitle:
-        "Answer a few quick questions to better understand whether memory support may be helpful.",
-      image:
-        "https://cdn.websmartassistant.com/widget/v1.8.3/images/memory-survey-hero.webp",
-      alt: "Memory support assessment",
-    },
-    affordability: {
-      title: "What Could Senior Living Cost for Your Situation?",
-      subtitle:
-        "Get guidance around planning, budgeting, and comparing senior living options.",
-      image:
-        "https://cdn.websmartassistant.com/widget/v1.8.3/images/affordability-survey-hero.webp",
-      alt: "Affordability assessment",
-    },
-  };
-
-const content = defaultContent[surveyKey] || defaultContent["senior-living"];
 
 
   return (
@@ -107,9 +108,7 @@ const content = defaultContent[surveyKey] || defaultContent["senior-living"];
 
         {/* RIGHT IMAGE */}
         <div className="wsa-survey-embed-image">
-            <img
-              src="https://cdn.websmartassistant.com/widget/v1.8/images/senior-living-survey-hero.webp"
-              alt="Senior living assessment"/>        
+            <img src={content.image} alt={content.alt} />        
         </div>
 
       </div>
