@@ -64,10 +64,6 @@ const defaultContent = {
   const primaryHoverColor =
     client?.survey?.branding?.primaryHoverColor || "#24483f";
 
-  const heroImage =
-    client?.survey?.branding?.heroImages?.[surveyKey] ||
-    "/images/surveys/senior-living-survey-hero.webp";
-
   const surveyUrl = `https://tools.websmartassistant.com/assessments/${clientKey}/${surveyKey}`;
 
 
