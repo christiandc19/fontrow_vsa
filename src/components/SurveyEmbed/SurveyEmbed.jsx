@@ -31,7 +31,7 @@ export default function SurveyEmbed({
     client?.survey?.branding?.heroImages?.[surveyKey] ||
     "/images/surveys/senior-living-survey-hero.webp";
 
-  const surveyUrl = `/assessments/${clientKey}/${surveyKey}`;
+  const surveyUrl = `https://tools.websmartassistant.com/assessments/${clientKey}/${surveyKey}`;
 
   return (
     <section className="wsa-survey-embed">
