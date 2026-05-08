@@ -7,6 +7,8 @@ import LeadCaptureScreen from "./components/LeadCaptureScreen";
 import { getClientConfig } from "../../chatbots/registry";
 import { getSurvey } from "./config/surveys";
 import { getSurveyResult } from "./utils/surveyUtils";
+import { createLead } from "../../services/widgetApi";
+// NEW
 import SurveyQuestionLayout from "./components/SurveyQuestionLayout";
 import "./Survey.css";
 
@@ -192,18 +194,43 @@ export default function Survey() {
     navigate(`/assessments/${resolvedClientKey}/${resolvedSurveyKey}/start`);
   };
 
-const handleAnswer = (question, value) => {
-  if (!question) return;
+  const handleAnswer = (question, value) => {
+    if (!question) return;
 
-  const selectedOption = question.options.find(
-    (opt) => opt.value === value
-  );
+    const selectedOption = question.options.find((opt) => opt.value === value);
 
-  setAnswers((prev) => ({
-    ...prev,
-    [question.id]: selectedOption,
-  }));
-};
+    if (!selectedOption) return;
+
+    // NEW:
+    // Supports multi-select questions.
+    // If question.multi is true, clicking an option will toggle it on/off.
+    if (question.multi) {
+      setAnswers((prev) => {
+        const currentAnswers = Array.isArray(prev[question.id])
+          ? prev[question.id]
+          : [];
+
+        const alreadySelected = currentAnswers.some(
+          (answer) => answer.value === value
+        );
+
+        return {
+          ...prev,
+          [question.id]: alreadySelected
+            ? currentAnswers.filter((answer) => answer.value !== value)
+            : [...currentAnswers, selectedOption],
+        };
+      });
+
+      return;
+    }
+
+    // Existing single-select behavior.
+    setAnswers((prev) => ({
+      ...prev,
+      [question.id]: selectedOption,
+    }));
+  };
 
   const handleBack = () => {
     if (currentIndex > 0 && currentIndex <= totalSteps) {
@@ -234,23 +261,65 @@ const handleAnswer = (question, value) => {
     setCurrentIndex((prev) => prev + 1);
   };
 
-  const handleLeadSubmit = (leadData) => {
-    setLead(leadData);
-    setLeadSubmitted(true);
+    const handleLeadSubmit = async (leadData) => {
+      setLead(leadData);
 
-    // placeholder for API submission later
-    console.log("Survey lead submitted:", {
-      clientKey: resolvedClientKey,
-      surveyKey: resolvedSurveyKey,
-      answers,
-      lead: leadData,
-      result,
-    });
+      try {
+        // NEW:
+        // Send completed survey lead to the backend.
+        // This saves the contact info, survey result, score, and answers
+        // so the lead can appear in the dashboard as a Survey lead.
+        await createLead({
+          firstName: leadData.firstName,
+          lastName: leadData.lastName,
+          email: leadData.email,
+          phone: leadData.phone,
 
-    navigate(`/assessments/${resolvedClientKey}/${resolvedSurveyKey}/results`, {
-      replace: true,
-    });
-  };
+          // NEW:
+          // Marks this lead as coming from a survey.
+          source: "survey",
+
+          // NEW:
+          // Stores which client and survey created this lead.
+          clientKey: resolvedClientKey,
+          formKey: resolvedSurveyKey,
+
+          // NEW:
+          // Simple summary message visible on the lead.
+          message: `Survey completed: ${result?.title || "Survey Result"}`,
+
+          // NEW:
+          // Stores survey-specific details in the Details table.
+          details: {
+            surveyKey: resolvedSurveyKey,
+            surveyResult: result?.title || "Survey Result",
+            surveyScore: result?.score || null,
+            surveyAnswersJson: JSON.stringify(answers),
+            browser: navigator.userAgent,
+            referrer: document.referrer,
+          },
+
+          // NEW:
+          // Adds a readable conversation-style note for the lead history.
+          conversations: [
+            {
+              sender: "system",
+              message: `Survey completed: ${result?.title || "Survey Result"}`,
+            },
+          ],
+        });
+
+        setLeadSubmitted(true);
+
+        navigate(`/assessments/${resolvedClientKey}/${resolvedSurveyKey}/results`, {
+          replace: true,
+        });
+      } catch (error) {
+        console.error("Failed to submit survey lead:", error);
+        alert("Something went wrong while saving your survey. Please try again.");
+      }
+    };
+
 
   const handleRestart = () => {
     setAnswers({
@@ -359,7 +428,11 @@ const handleAnswer = (question, value) => {
           }
           helperSubtitle={currentQuestion?.subtitle}
           options={currentQuestion?.options || []}
-          selected={answers[currentQuestion?.id]?.value}
+          selected={
+            currentQuestion?.multi
+              ? answers[currentQuestion?.id]?.map((answer) => answer.value) || []
+              : answers[currentQuestion?.id]?.value
+          }          
           onSelect={(val) => handleAnswer(currentQuestion, val)}
           onNext={handleNext}
           onBack={handleBack}

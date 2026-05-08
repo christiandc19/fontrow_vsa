@@ -1,8 +1,10 @@
+
 const evergreenHeightsConfig = {
   clientKey: "evergreen-heights",
   communityName: "Evergreen Heights Senior Living",
 
-  logoUrl: "https://cdn.websmartassistant.com/clients/evergreen-heights/evergreen-heights.png",
+  logoUrl:
+    "https://cdn.websmartassistant.com/clients/evergreen-heights/evergreen-heights.png",
 
   headerTitle: "Chat with Evergreen Heights",
   headerSubtitle: "We’re here to help you explore senior living options.",
@@ -31,16 +33,19 @@ const evergreenHeightsConfig = {
       logo:
         "https://cdn.websmartassistant.com/clients/evergreen-heights/evergreen-heights.png",
 
-      heroImages: {
-        "senior-living":
-          "/images/surveys/senior-living-survey-hero.webp",
-        downsizing:
-          "/images/surveys/downsizing-survey-hero.webp",
-        "memory-support":
-          "/images/surveys/memory-survey-hero.webp",
-        affordability:
-          "/images/surveys/affordability-survey-hero.webp",
-      },
+    heroImages: {
+      "senior-living":
+        "https://cdn.websmartassistant.com/survey/images/senior-living-survey-hero.webp",
+
+      downsizing:
+        "https://cdn.websmartassistant.com/survey/images/downsizing-survey-hero.webp",
+
+      "memory-support":
+        "https://cdn.websmartassistant.com/survey/images/memory-survey-hero.webp",
+
+      affordability:
+        "https://cdn.websmartassistant.com/survey/images/affordability-survey-hero.webp",
+    },
 
       overlayColor: "rgba(36, 72, 63, 0.66)",
       textColor: "#ffffff",
@@ -112,7 +117,14 @@ const evergreenHeightsConfig = {
     contactPrompt: "Share your contact details and we’ll confirm your tour.",
     returningPrompt: "We’ll confirm your visit shortly.",
     returningButton: "Schedule Tour",
-    timeSlots: ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM"],
+    timeSlots: [
+      "9:00 AM",
+      "10:00 AM",
+      "11:00 AM",
+      "1:00 PM",
+      "2:00 PM",
+      "3:00 PM",
+    ],
   },
 
   ask: {

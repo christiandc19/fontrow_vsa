@@ -58,7 +58,13 @@ export default function SurveyQuestionLayout({
                   key={opt.value}
                   type="button"
                   className={`survey-option-btn ${
-                    selected === opt.value ? "selected" : ""
+                    Array.isArray(selected)
+                      ? selected.includes(opt.value)
+                        ? "selected"
+                        : ""
+                      : selected === opt.value
+                      ? "selected"
+                      : ""
                   }`}
                   onClick={() => onSelect(opt.value)}
                 >
@@ -86,7 +92,7 @@ export default function SurveyQuestionLayout({
           <button
             type="button"
             className="survey-btn survey-btn-next"
-            disabled={!selected}
+            disabled={Array.isArray(selected) ? selected.length === 0 : !selected}            
             onClick={onNext}
           >
             Next →
