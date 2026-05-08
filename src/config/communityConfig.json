@@ -1,0 +1,13 @@
+{
+  "logo": "/logo.svg",
+  "primaryColor": "#0084ff",
+  "welcomeMessage": "Hello! How can I help you today?",
+  "inquiries": [
+    "Schedule A Visit",
+    "Product Information",
+    "Pricing and Plans",
+    "Technical Support",
+    "Account Issues",
+    "General Questions"
+  ]
+}
