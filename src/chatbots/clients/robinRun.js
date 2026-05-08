@@ -2,7 +2,7 @@ const robinRunConfig = {
   clientKey: "robin-run",
   communityName: "Robin Run Village",
 
-  logoUrl: "https://tools.websmartassistant.com/images/clients/robin-run/robin-run-logo.webp",
+  logoUrl: "https://cdn.websmartassistant.com/clients/robin-run/robin-run-logo.webp",
 
   headerTitle: "Chat with Robin Run Village",
   headerSubtitle: "We’re here to help you explore senior living options.",
@@ -29,12 +29,13 @@ const robinRunConfig = {
 
     branding: {
       logo: "https://cdn.websmartassistant.com/clients/robin-run/robin-run-logo.webp",
-        heroImages: {
-        "senior-living": "https://cdn.websmartassistant.com/clients/robin-run/senior-living-survey-hero.webp",
-        downsizing: "https://cdn.websmartassistant.com/clients/robin-run/downsizing-survey-hero.webp",
-        "memory-support": "https://cdn.websmartassistant.com/clients/robin-run/memory-survey-hero.webp",
-        affordability: "https://cdn.websmartassistant.com/clients/robin-run/affordability-survey-hero.webp",
-        },
+
+      heroImages: {
+        "senior-living": "/images/surveys/senior-living-survey-hero.webp",
+        downsizing: "/images/surveys/downsizing-survey-hero.webp",
+        "memory-support": "/images/surveys/memory-survey-hero.webp",
+        affordability: "/images/surveys/affordability-survey-hero.webp",
+      },
         overlayColor: "rgba(15, 94, 104, 0.62)",
         textColor: "#ffffff",
         primaryColor: "#8b2c1a",
@@ -124,7 +125,7 @@ const robinRunConfig = {
   quote: {},
 
 
-livingOptions: [
+Options: [
   {
     id: "independent-living",
     label: "Independent Living",

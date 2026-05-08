@@ -78,16 +78,20 @@ export default function QuestionScreen({
           </div>
 
           <div className="survey-step-row">
-            <div className="survey-step">
-              Step {safeCurrentStep} of {safeTotalSteps}
-            </div>
-            <div className="survey-step-percent">{progress}%</div>
+            <span className="survey-step">
+              Step {currentStep} of {totalSteps}
+            </span>
+            <span className="survey-step-percent">
+              {Math.round((currentStep / totalSteps) * 100)}%
+            </span>
           </div>
 
           <div className="survey-progress-bar">
             <div
               className="survey-progress-fill"
-              style={{ width: `${progress}%` }}
+              style={{
+                width: `${Math.round((currentStep / totalSteps) * 100)}%`,
+              }}
             />
           </div>
 
