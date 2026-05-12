@@ -3,23 +3,20 @@ import ReactDOM from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 
 import ChatBox from "./components/ChatBox/ChatBox";
-import SurveyEmbed from "./components/SurveyEmbed/SurveyEmbed";
 
 import "./components/ChatBox/ChatBox.css";
-import "./components/SurveyEmbed/SurveyEmbed.css";
 
 window.WebSmartAssistant = function (config = {}) {
-  const type = config.type || "chatbot";
-
-  const rootId =
-    type === "survey"
-      ? `websmartassistant-survey-root-${config.surveyKey || "default"}`
-      : "websmartassistant-root";
+  const rootId = "websmartassistant-root";
 
   const existing = document.getElementById(rootId);
-  if (existing) existing.remove();
+
+  if (existing) {
+    existing.remove();
+  }
 
   const container = document.createElement("div");
+
   container.id = rootId;
 
   const target = config.target
@@ -37,14 +34,7 @@ window.WebSmartAssistant = function (config = {}) {
 
   root.render(
     <MemoryRouter>
-      {type === "survey" ? (
-        <SurveyEmbed
-          clientKey={config.clientKey}
-          surveyKey={config.surveyKey || "senior-living"}
-        />
-      ) : (
-        <ChatBox config={config} />
-      )}
+      <ChatBox config={config} />
     </MemoryRouter>
   );
 };

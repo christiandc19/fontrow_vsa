@@ -92,7 +92,6 @@ const evergreenHeightsConfig = {
   },
 
   mainMenu: [
-    { id: "survey", label: "Get Your Guide", type: "flow" },
     { id: "schedule", label: "Schedule a Tour", type: "flow" },
     { id: "living-options", label: "Living Options", type: "flow" },
     { id: "floorplans", label: "View Floor Plans", type: "link", url: "#" },
@@ -129,7 +128,8 @@ const evergreenHeightsConfig = {
 
   ask: {
     q1: "What would you like to know about Evergreen Heights?",
-    placeholder: "Ex: pricing, availability, levels of care, amenities, tours…",
+    placeholder:
+      "Ex: pricing, availability, levels of care, amenities, tours…",
     contactPrompt: "Leave your contact info and we’ll get back to you shortly.",
     returningPrompt: "Thanks! We’ll follow up shortly.",
     returningButton: "Send Message",
