@@ -11,7 +11,7 @@ const webSmartAssistantConfig = {
   welcomeMessage: "Hi there! How can I help you today?",
 
   launcherTitle: "Web Smart Assistant",
-  launcherSubtitle: "Chatbots, surveys, and lead tools",
+  launcherSubtitle: "Evergreen Heights",
 
   theme: {
     primary: "#0f172a",

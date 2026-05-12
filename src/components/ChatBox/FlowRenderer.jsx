@@ -4,7 +4,6 @@ import ProjectsFlow from "./flows/ProjectsFlow";
 import QuoteFlow from "./flows/QuoteFlow";
 import ScheduleFlow from "./flows/ScheduleFlow";
 import AskFlow from "./flows/AskFlow";
-import GuideFlow from "./flows/GuideFlow";
 import OptionsFlow from "./flows/OptionsFlow";
 
 export default function FlowRenderer({
@@ -50,7 +49,6 @@ export default function FlowRenderer({
   const {
     handleServiceSelect,
     handleProjectSelect,
-    handleSelectGuide,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -80,10 +78,6 @@ export default function FlowRenderer({
         />
       );
 
-    case "survey":
-      return (
-        <GuideFlow config={mergedConfig} onSelectGuide={handleSelectGuide} />
-      );
 
     case "quote":
       return (
