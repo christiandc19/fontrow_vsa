@@ -53,11 +53,14 @@
 .chatbox-container {
   width: 350px;
   max-width: calc(100vw - 32px);
+
   height: 650px;
   max-height: calc(100vh - 32px);
+
   position: fixed;
   bottom: 20px;
   right: 20px;
+
   background: #ffffff;
   border-radius: 24px;
   display: flex;
@@ -67,21 +70,37 @@
   z-index: 999999;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   border: 1px solid rgba(0, 0, 0, 0.06);
-  animation: chatExpandUp 0.38s ease-out forwards;
-  transform-origin: bottom right;
+
+  animation: chatGrowFromPill 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Open animation for full chatbox */
-@keyframes chatExpandUp {
-  0% {
-    opacity: 0;
-    transform: translateY(24px) scale(0.96);
+@keyframes chatGrowFromPill {
+  from {
+    height: 68px;
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+
+  to {
+    height: 650px;
   }
 }
+
+
+.chatbox-ctas,
+.back-menu-btn {
+  animation: chatContentScrollUp 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes chatContentScrollUp {
+  from {
+    transform: translateY(650px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+
 
 /* ========================================
    CHAT HEADER
@@ -517,32 +536,35 @@
   background: var(--chat-launcher-bg);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  transform-origin: bottom right;
+
   transition:
-    width 0.35s ease,
-    min-height 0.35s ease,
-    border-radius 0.35s ease,
-    padding 0.35s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    width 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 /* First state: small circle only */
 .chat-launcher.circle {
   width: 68px;
+  height: 68px;
   min-height: 68px;
   border-radius: 999px;
   padding: 0;
   justify-content: center;
-  animation: launcherCircleIn 0.35s ease forwards;
+  animation: none;
 }
+
+
 
 /* Second state: preview pill */
 .chat-launcher.pill {
-  width: 360px;
+  width: 320px;
   max-width: calc(100vw - 32px);
-  min-height: 86px;
+  height: 68px;
+  min-height: 68px;
   border-radius: 999px;
-  padding: 10px 12px;
+  padding: 0 8px 0 4px;  
   justify-content: space-between;
   background: linear-gradient(135deg, #0f172a, #111827);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -573,22 +595,23 @@
   background: transparent;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 8px;
+  gap: 12px;
+  padding: 0;
   cursor: pointer;
   text-align: left;
 }
 
 /* In circle mode, center the logo */
 .chat-launcher.circle .chat-launcher-main {
-  justify-content: center;
-  padding: 0;
+  justify-content: flex-start;
+  padding: 0 5px;
 }
 
 /* Logo wrapper */
 .chat-launcher-avatar-wrap {
   width: 58px;
   height: 58px;
+  margin-left: 0;
   border-radius: 999px;
   background: linear-gradient(135deg, #38bdf8, #0ea5e9);
   display: flex;
@@ -626,13 +649,22 @@
   flex: 1;
   min-width: 0;
   text-align: left;
+  opacity: 1;
+  transform: translateX(0);
+
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .chat-launcher-title {
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-launcher-subtitle {
@@ -786,10 +818,17 @@
   line-height: 1;
 }
 
-/* Hide text/icon when launcher is in circle mode */
+/* Smoothly hide text when collapsing to circle */
 .chat-launcher.circle .chat-launcher-text,
 .chat-launcher.circle .chat-launcher-icon {
-  display: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
 }
 
 /* ========================================

@@ -160,7 +160,7 @@ export default function ChatBox({ config = {} }) {
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const [launcherMode, setLauncherMode] = useState("hidden");
+  const [launcherMode, setLauncherMode] = useState("circle");
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
@@ -190,20 +190,6 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
-  useEffect(() => {
-    const circleTimer = setTimeout(() => {
-      setLauncherMode("circle");
-    }, 250);
-
-    const pillTimer = setTimeout(() => {
-      setLauncherMode("pill");
-    }, 1100);
-
-    return () => {
-      clearTimeout(circleTimer);
-      clearTimeout(pillTimer);
-    };
-  }, []);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -214,17 +200,19 @@ export default function ChatBox({ config = {} }) {
     });
   }, [messages, activeFlowId, quoteSelections, callSelections, hasTypedQuestion]);
 
-  const openLink = (url) => {
-    if (!url) return;
 
-    if (url.startsWith("/")) {
-      navigate(url);
-      setIsOpen(false);
-      return;
-    }
+  const openLink = (url) => {
+  if (!url) return;
+
+  if (url.startsWith("/")) {
+    navigate(url);
+    setIsOpen(false);
+    return;
+  }
 
     window.open(url, "_blank", "noopener,noreferrer");
   };
+
 
   const checkUserByIP = async (updateFormData = true) => {
     setIsCheckingIP(true);
@@ -398,18 +386,6 @@ export default function ChatBox({ config = {} }) {
 
     saveConversationMessage(`Industry: ${project.label}`, "user");
     openLink(project.url);
-  };
-
-  const handleSelectGuide = (guide) => {
-    if (!guide) return;
-
-    saveConversationMessage(`Guide: ${guide.label}`, "user");
-
-    const currentClientKey = mergedConfig?.clientKey || "demo";
-    const surveyKey =
-      guide?.id || mergedConfig?.survey?.defaultSurveyKey || "senior-living";
-
-    openLink(`/assessments/${currentClientKey}/${surveyKey}`);
   };
 
   const handleSelectProjectType = (option) => {
@@ -669,7 +645,6 @@ export default function ChatBox({ config = {} }) {
   const flowHandlers = {
     handleServiceSelect,
     handleProjectSelect,
-    handleSelectGuide,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,

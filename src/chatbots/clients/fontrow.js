@@ -22,10 +22,6 @@ const fontrowConfig = {
     launcherAccent: "#000000",
   },
 
-    survey: {
-    enabled: false,
-  },
-
   mainMenu: [
     {
       id: "projects",
@@ -44,7 +40,6 @@ const fontrowConfig = {
       type: "link",
       url: "https://fontrow.com/contact",
     },
-
     {
       id: "ask",
       label: "Ask Us A Question",
@@ -52,7 +47,7 @@ const fontrowConfig = {
     },
   ],
 
-  // future-safe
+  // Future-safe placeholders
   services: [],
   projects: [],
   quote: {},
@@ -76,8 +71,7 @@ const fontrowConfig = {
 
   ask: {
     q1: "What can we help you with?",
-    placeholder:
-      "Ex: new website, redesign, SEO, maintenance, social media…",
+    placeholder: "Ex: new website, redesign, SEO, maintenance, social media…",
     contactPrompt: "Drop your contact info and we’ll reach out shortly.",
     returningPrompt: "Thanks! We’ll follow up shortly.",
     returningButton: "Send Message",
