@@ -22,7 +22,7 @@ const API_KEY =
 
 const authHeaders = {
   "Content-Type": "application/json",
-  Authorization: `Bearer ${API_KEY}`,
+  "X-Api-Key": API_KEY,
 };
 
 const getBotConfig = (clientKey) => getClientConfig(clientKey) || {};

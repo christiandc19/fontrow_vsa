@@ -1,3 +1,4 @@
+
 const evergreenHeightsConfig = {
   clientKey: "evergreen-heights",
   communityName: "Evergreen Heights Senior Living",
@@ -22,6 +23,72 @@ const evergreenHeightsConfig = {
     textDark: "#24352f",
     launcherBg: "#ffffff",
     launcherAccent: "#c69c3f",
+  },
+
+  survey: {
+    enabled: true,
+    defaultSurveyKey: "senior-living",
+
+    branding: {
+      logo:
+        "https://cdn.websmartassistant.com/clients/evergreen-heights/evergreen-heights.png",
+
+    heroImages: {
+      "senior-living":
+        "https://cdn.websmartassistant.com/survey/images/senior-living-survey-hero.webp",
+
+      downsizing:
+        "https://cdn.websmartassistant.com/survey/images/downsizing-survey-hero.webp",
+
+      "memory-support":
+        "https://cdn.websmartassistant.com/survey/images/memory-survey-hero.webp",
+
+      affordability:
+        "https://cdn.websmartassistant.com/survey/images/affordability-survey-hero.webp",
+    },
+
+      overlayColor: "rgba(36, 72, 63, 0.66)",
+      textColor: "#ffffff",
+      primaryColor: "#2f5d50",
+      primaryHoverColor: "#24483f",
+    },
+
+    landing: {
+      kicker: "Evergreen Heights",
+      ctaLabel: "Start Assessment",
+      trustNote:
+        "Private, simple, and designed to help you explore your options with confidence.",
+    },
+
+    embed: {
+      title: "Is Senior Living the Right Next Step?",
+      subtitle:
+        "Learn about your options and get personalized results with this quick assessment.",
+      buttonLabel: "Start Now",
+      poweredBy: "Powered by WebSmartAssistant",
+    },
+
+    leadCapture: {
+      title: "See Your Recommendation",
+      subtitle:
+        "Before we show your results, share your details so our team can help you explore the right next step.",
+      firstNameLabel: "First Name",
+      lastNameLabel: "Last Name",
+      emailLabel: "Email",
+      phoneLabel: "Phone",
+      consentLabel:
+        "I agree to be contacted about senior living options and next steps.",
+      submitLabel: "Show My Results",
+      backLabel: "Back",
+      note:
+        "Your information stays private and is only used to help with your inquiry.",
+    },
+
+    actions: {
+      primary: "#",
+      memory: "#",
+      assisted: "#",
+    },
   },
 
   mainMenu: [

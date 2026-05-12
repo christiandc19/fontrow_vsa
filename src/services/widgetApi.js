@@ -8,7 +8,7 @@ const API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CHA
 
 const authHeaders = {
   "Content-Type": "application/json",
-  Authorization: `Bearer ${API_KEY}`,
+  "X-Api-Key": API_KEY,
 };
 
 export async function createLead(payload) {
