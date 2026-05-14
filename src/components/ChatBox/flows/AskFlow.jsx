@@ -41,11 +41,6 @@ export default function AskFlow({
               "Please confirm or update your contact information so our team can follow up."}
           </div>
 
-          {/* 
-            Always show editable contact fields.
-            If a returning user was found by IP, these fields may be prefilled.
-            The user can still change them before submitting.
-          */}
           <form className="chat-form" onSubmit={onSubmitForm}>
             <input
               name="name"
@@ -74,9 +69,7 @@ export default function AskFlow({
             />
 
             <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-              {isSubmittingLead
-                ? "Sending…"
-                : askCfg.returningButton || "Send Message"}
+              {isSubmittingLead ? "Sending…" : askCfg.returningButton || "Send Message"}
             </button>
           </form>
         </>

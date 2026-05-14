@@ -39,6 +39,12 @@ const formatDateLabel = (iso) => {
   });
 };
 
+const normalizeEmail = (email = "") => email.trim().toLowerCase();
+const normalizePhone = (phone = "") => phone.replace(/\D/g, "");
+
+const getFullNameFromLead = (lead) =>
+  `${lead?.firstName || ""} ${lead?.lastName || ""}`.trim();
+
 export default function ChatBox({ config = {} }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -78,24 +84,19 @@ export default function ChatBox({ config = {} }) {
     "--chat-primary-hover": theme.primaryHover || "#7c402c",
     "--chat-accent":
       theme.accent || theme.launcherAccent || theme.primary || "#16335b",
-
     "--chat-header-bg": theme.headerBg || "#fcf8ec",
     "--chat-header-text": theme.headerText || theme.textDark || "#333333",
     "--chat-header-subtitle":
       theme.headerSubtitle || theme.textMuted || theme.textDark || "#555555",
-
     "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
     "--chat-bot-bubble-text":
       theme.botBubbleText || theme.textDark || "#333333",
-
     "--chat-user-bubble-bg":
       theme.userBubbleBg || theme.primary || "#935135",
     "--chat-user-bubble-text": theme.userBubbleText || "#ffffff",
-
     "--chat-text-dark": theme.textDark || "#333333",
     "--chat-text-light": theme.textLight || "#ffffff",
     "--chat-text-muted": theme.textMuted || "#666666",
-
     "--chat-launcher-bg": theme.launcherBg || "#ffffff",
     "--chat-launcher-text":
       theme.launcherText || theme.textDark || "#333333",
@@ -103,25 +104,21 @@ export default function ChatBox({ config = {} }) {
       theme.launcherSubtitle || theme.textMuted || "#666666",
     "--chat-launcher-accent":
       theme.launcherAccent || theme.primary || "#16335b",
-
     "--chat-button-bg": theme.buttonBg || "#ffffff",
     "--chat-button-text": theme.buttonText || theme.textDark || "#333333",
     "--chat-button-border": theme.buttonBorder || "#dddddd",
     "--chat-button-active-bg":
       theme.buttonActiveBg || theme.primary || "#935135",
     "--chat-button-active-text": theme.buttonActiveText || "#ffffff",
-
     "--chat-back-button-bg": theme.backButtonBg || "#f3f4f6",
     "--chat-back-button-text":
       theme.backButtonText || theme.textDark || "#333333",
     "--chat-back-button-hover-bg":
       theme.backButtonHoverBg || theme.primaryHover || "#e5e7eb",
-
     "--chat-calendar-bg": theme.calendarBg || "#ffffff",
     "--chat-calendar-text": theme.calendarText || theme.textDark || "#333333",
     "--chat-calendar-muted-text":
       theme.calendarMutedText || theme.textMuted || "#999999",
-
     "--chat-input-bg": theme.inputBg || "#ffffff",
     "--chat-input-text": theme.inputText || theme.textDark || "#333333",
     "--chat-input-border": theme.inputBorder || "#dddddd",
@@ -141,8 +138,6 @@ export default function ChatBox({ config = {} }) {
 
   const quoteCfg = mergedConfig?.quote || {};
   const askCfg = mergedConfig?.ask || {};
-
-  // Pricing flow configuration from the client config
   const pricingCfg = mergedConfig?.pricing || {};
 
   const quoteProjectTypes = quoteCfg.projectTypes || [];
@@ -162,19 +157,17 @@ export default function ChatBox({ config = {} }) {
     time: null,
   };
 
-  // Pricing flow selections
   const initialPricing = {
-  livingOption: null,
-  inquiryFor: null,
-  timeline: null,
-};
+    livingOption: null,
+    inquiryFor: null,
+    timeline: null,
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const [launcherMode, setLauncherMode] = useState("circle");
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
-  const [isCheckingIP, setIsCheckingIP] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [quoteSelections, setQuoteSelections] = useState(initialQuote);
@@ -182,10 +175,7 @@ export default function ChatBox({ config = {} }) {
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
   const [pendingConversations, setPendingConversations] = useState([]);
-
-  // Controls the startup typing animation
   const [showStartupTyping, setShowStartupTyping] = useState(false);
-
   const [pricingSelections, setPricingSelections] = useState(initialPricing);
 
   const isSchedulingFlow =
@@ -205,14 +195,11 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
-
   useEffect(() => {
     if (!scrollRef.current) return;
 
-    // Small delay lets the next Pricing question render first,
-    // then scrolls the chat to the newest question.
     const timer = setTimeout(() => {
-      scrollRef.current.scrollTo({
+      scrollRef.current?.scrollTo({
         top: scrollRef.current.scrollHeight,
         behavior: "smooth",
       });
@@ -228,23 +215,19 @@ export default function ChatBox({ config = {} }) {
     hasTypedQuestion,
   ]);
 
-
   const openLink = (url) => {
-  if (!url) return;
+    if (!url) return;
 
-  if (url.startsWith("/")) {
-    navigate(url);
-    setIsOpen(false);
-    return;
-  }
+    if (url.startsWith("/")) {
+      navigate(url);
+      setIsOpen(false);
+      return;
+    }
 
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-
   const checkUserByIP = async (updateFormData = true) => {
-    setIsCheckingIP(true);
-
     try {
       const userData = await getUserByIP();
       const user = Array.isArray(userData) ? userData[0] : userData;
@@ -255,7 +238,7 @@ export default function ChatBox({ config = {} }) {
 
       if (updateFormData) {
         setFormData({
-          name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          name: getFullNameFromLead(user),
           email: user.email || "",
           phone: user.phone || "",
         });
@@ -265,9 +248,30 @@ export default function ChatBox({ config = {} }) {
     } catch (error) {
       console.error("Error checking user by IP:", error);
       return null;
-    } finally {
-      setIsCheckingIP(false);
     }
+  };
+
+  const contactMatchesFoundUser = () => {
+    if (!foundUserData) return false;
+
+    const foundEmail = normalizeEmail(foundUserData.email);
+    const enteredEmail = normalizeEmail(formData.email);
+
+    if (foundEmail && enteredEmail) {
+      return foundEmail === enteredEmail;
+    }
+
+    const foundPhone = normalizePhone(foundUserData.phone);
+    const enteredPhone = normalizePhone(formData.phone);
+
+    if (foundPhone && enteredPhone) {
+      return foundPhone === enteredPhone;
+    }
+
+    const foundName = getFullNameFromLead(foundUserData).toLowerCase();
+    const enteredName = formData.name.trim().toLowerCase();
+
+    return !!foundName && !!enteredName && foundName === enteredName;
   };
 
   const saveConversationMessage = async (
@@ -315,28 +319,22 @@ export default function ChatBox({ config = {} }) {
 
   const openChat = async () => {
     setIsOpen(true);
-
-    // Clear previous messages first
     setMessages([]);
-
-    // Show typing animation immediately
     setShowStartupTyping(true);
 
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
+    setPricingSelections(initialPricing);
     setAskQuestion("");
     setHasTypedQuestion(false);
     setFoundUserData(null);
     setPendingConversations([]);
 
-    // Simulated AI typing delay
     await new Promise((resolve) => setTimeout(resolve, 2200));
 
-    // Hide typing animation
     setShowStartupTyping(false);
 
-    // Show welcome message AFTER typing
     setMessages([
       {
         id: "welcome",
@@ -346,12 +344,7 @@ export default function ChatBox({ config = {} }) {
       },
     ]);
 
-    // Small delay so the typing animation feels natural
-    await new Promise((resolve) => setTimeout(resolve, 2200));
-
     const userData = await checkUserByIP();
-
-
 
     if (!userData) {
       setFormData(initialForm);
@@ -377,10 +370,27 @@ export default function ChatBox({ config = {} }) {
   const syncKnownUserIntoForm = () => {
     if (foundUserData && formData.name === "") {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
+        name: getFullNameFromLead(foundUserData),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
+    }
+  };
+
+  const resetFlowSelections = (nextFlowId) => {
+    if (nextFlowId !== "quote") setQuoteSelections(initialQuote);
+
+    if (nextFlowId !== "schedule" && nextFlowId !== "demo") {
+      setCallSelections(initialCall);
+    }
+
+    if (nextFlowId !== "pricing") {
+      setPricingSelections(initialPricing);
+    }
+
+    if (nextFlowId !== "ask") {
+      setAskQuestion("");
+      setHasTypedQuestion(false);
     }
   };
 
@@ -393,55 +403,21 @@ export default function ChatBox({ config = {} }) {
     }
 
     setActiveFlowId(item.id);
-
-    if (item.id !== "quote") setQuoteSelections(initialQuote);
-
-    if (item.id !== "schedule" && item.id !== "demo") {
-      setCallSelections(initialCall);
-    }
-
-    if (item.id !== "ask") {
-      setAskQuestion("");
-      setHasTypedQuestion(false);
-    }
-
+    resetFlowSelections(item.id);
     syncKnownUserIntoForm();
   };
 
   const handleBackToMainMenu = () => {
     saveConversationMessage("Back to Main Menu", "user");
     setActiveFlowId(null);
-    setQuoteSelections(initialQuote);
-    setCallSelections(initialCall);
-    setAskQuestion("");
-    setHasTypedQuestion(false);
+    resetFlowSelections(null);
     syncKnownUserIntoForm();
   };
 
-    const handleCommunityFlowSelect = (flowId) => {
-    // Save which community action the user clicked
+  const handleCommunityFlowSelect = (flowId) => {
     saveConversationMessage(`Community action: ${flowId}`, "user");
-
-    // Switch from View Community to the selected chatbot flow
     setActiveFlowId(flowId);
-
-    // Reset quote selections if this is not the quote flow
-    if (flowId !== "quote") {
-      setQuoteSelections(initialQuote);
-    }
-
-    // Reset schedule selections if this is not schedule/demo
-    if (flowId !== "schedule" && flowId !== "demo") {
-      setCallSelections(initialCall);
-    }
-
-    // Reset ask question state if this is not ask flow
-    if (flowId !== "ask") {
-      setAskQuestion("");
-      setHasTypedQuestion(false);
-    }
-
-    // Prefill contact form if returning user data exists
+    resetFlowSelections(flowId);
     syncKnownUserIntoForm();
   };
 
@@ -477,43 +453,43 @@ export default function ChatBox({ config = {} }) {
   };
 
   const handleSelectPricingLivingOption = (option) => {
-  saveConversationMessage(`Pricing - Living Option: ${option}`, "user");
+    saveConversationMessage(`Pricing - Living Option: ${option}`, "user");
 
-  setPricingSelections((prev) => ({
-    ...prev,
-    livingOption: option,
-    inquiryFor: null,
-    timeline: null,
-  }));
-};
+    setPricingSelections((prev) => ({
+      ...prev,
+      livingOption: option,
+      inquiryFor: null,
+      timeline: null,
+    }));
+  };
 
-const handleSelectPricingInquiryFor = (option) => {
-  saveConversationMessage(`Pricing - For: ${option}`, "user");
+  const handleSelectPricingInquiryFor = (option) => {
+    saveConversationMessage(`Pricing - For: ${option}`, "user");
 
-  setPricingSelections((prev) => ({
-    ...prev,
-    inquiryFor: option,
-    timeline: null,
-  }));
-};
+    setPricingSelections((prev) => ({
+      ...prev,
+      inquiryFor: option,
+      timeline: null,
+    }));
+  };
 
-const handleSelectPricingTimeline = (option) => {
-  saveConversationMessage(`Pricing - Timeline: ${option}`, "user");
+  const handleSelectPricingTimeline = (option) => {
+    saveConversationMessage(`Pricing - Timeline: ${option}`, "user");
 
-  setPricingSelections((prev) => ({
-    ...prev,
-    timeline: option,
-  }));
-};
+    setPricingSelections((prev) => ({
+      ...prev,
+      timeline: option,
+    }));
+  };
 
   const handleSelectCallDate = (isoDate) => {
-    const label = activeFlowId === "demo" ? "Demo" : "Call";
+    const label = activeFlowId === "demo" ? "Demo" : "Visit";
     saveConversationMessage(`${label} - Date: ${isoDate}`, "user");
     setCallSelections((prev) => ({ ...prev, date: isoDate }));
   };
 
   const handleSelectCallTime = (time) => {
-    const label = activeFlowId === "demo" ? "Demo" : "Call";
+    const label = activeFlowId === "demo" ? "Demo" : "Visit";
     saveConversationMessage(`${label} - Time: ${time}`, "user");
     setCallSelections((prev) => ({ ...prev, time }));
   };
@@ -537,12 +513,9 @@ const handleSelectPricingTimeline = (option) => {
 
   const resetAllFlows = () => {
     setActiveFlowId(null);
-
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
-
     setPricingSelections(initialPricing);
-
     setAskQuestion("");
     setHasTypedQuestion(false);
 
@@ -550,11 +523,76 @@ const handleSelectPricingTimeline = (option) => {
       setFormData(initialForm);
     } else {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
+        name: getFullNameFromLead(foundUserData),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
     }
+  };
+
+  const buildConversationMessage = () => {
+    if (activeFlowId === "quote") {
+      return `Quote Request: ${JSON.stringify(quoteSelections)}`;
+    }
+
+    if (activeFlowId === "pricing") {
+      return `Pricing Request
+
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+Living Option: ${pricingSelections.livingOption}
+For: ${pricingSelections.inquiryFor}
+Timeline: ${pricingSelections.timeline}`;
+    }
+
+    if (activeFlowId === "schedule") {
+      return `Schedule Visit Request
+
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+Date: ${formatDateLabel(callSelections.date)}
+Time: ${callSelections.time}`;
+    }
+
+    if (activeFlowId === "demo") {
+      return `Demo Request: ${callSelections.date} ${callSelections.time}`;
+    }
+
+    if (activeFlowId === "ask") {
+      return `Question Request
+
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+Question: ${askQuestion}`;
+    }
+
+    return `Lead from chatbot (${activeFlowId || "main_menu"})`;
+  };
+
+  const buildBotReply = () => {
+    if (activeFlowId === "ask") {
+      return `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+    }
+
+    if (activeFlowId === "pricing") {
+      return `Thanks, ${formData.name}! We received your pricing request and our team will follow up shortly.`;
+    }
+
+    if (isSchedulingFlow && callSelections.date && callSelections.time) {
+      const requestLabel = activeFlowId === "demo" ? "demo" : "visit";
+
+      return `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
+        callSelections.date
+      )} at ${callSelections.time}.`;
+    }
+
+    return `Thank you, ${formData.name}! A team member will reach out soon.`;
   };
 
   const handleSubmitForm = async (e) => {
@@ -563,35 +601,11 @@ const handleSelectPricingTimeline = (option) => {
     setIsSubmittingLead(true);
 
     try {
-      let conversationMessage = "";
-
-      if (activeFlowId === "quote") {
-        conversationMessage = `Quote Request: ${JSON.stringify(quoteSelections)}`;
-      } else if (activeFlowId === "pricing") {
-      conversationMessage = `
-      Pricing Request
-
-      Name: ${formData.name}
-      Email: ${formData.email}
-      Phone: ${formData.phone}
-
-      Living Option: ${pricingSelections.livingOption}
-      For: ${pricingSelections.inquiryFor}
-      Timeline: ${pricingSelections.timeline}
-      `;      
-      } else if (activeFlowId === "schedule") {
-        conversationMessage = `Call Request: ${callSelections.date} ${callSelections.time}`;
-      } else if (activeFlowId === "demo") {
-        conversationMessage = `Demo Request: ${callSelections.date} ${callSelections.time}`;
-      } else if (activeFlowId === "ask") {
-        conversationMessage = `Question: ${askQuestion}`;
-      } else {
-        conversationMessage = `Lead from chatbot (${activeFlowId || "main_menu"})`;
-      }
-
+      const conversationMessage = buildConversationMessage();
       let newUserData = null;
+      const shouldAttachToFoundUser = foundUserData && contactMatchesFoundUser();
 
-      if (foundUserData) {
+      if (shouldAttachToFoundUser) {
         const leadId = foundUserData?.id;
 
         if (!leadId) {
@@ -634,14 +648,15 @@ const handleSelectPricingTimeline = (option) => {
           firstName,
           lastName,
           phone: formData.phone,
+          source: "chatbot",
+          formKey: activeFlowId || "chatbot",
           meta: {
             flow: activeFlowId,
             quoteSelections,
             callSelections,
             pricingSelections,
+            askQuestion,
           },
-          source: "chatbot",
-          formKey: activeFlowId || "chatbot",
           conversations: [
             ...pendingConversations,
             {
@@ -666,21 +681,7 @@ const handleSelectPricingTimeline = (option) => {
         }
       }
 
-      let botReply = "";
-
-        if (activeFlowId === "ask") {
-          botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
-        } else if (activeFlowId === "pricing") {
-          botReply = `Thanks, ${formData.name}! We received your pricing request and our team will follow up shortly.`;
-        } else if (isSchedulingFlow && callSelections.date && callSelections.time) {
-        const requestLabel = activeFlowId === "demo" ? "demo" : "call";
-
-        botReply = `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
-          callSelections.date
-        )} at ${callSelections.time}.`;
-      } else {
-        botReply = `Thank you, ${formData.name}! A team member will reach out soon.`;
-      }
+      const botReply = buildBotReply();
 
       setMessages((prev) => [
         ...prev,
@@ -741,22 +742,22 @@ const handleSelectPricingTimeline = (option) => {
     quoteCfg,
     scheduleCfg,
     askCfg,
+    pricingCfg,
     quoteProjectTypes,
     quoteClientTypes,
     quoteTimelines,
     callTimeSlots,
-    pricingCfg,
   };
 
   const flowState = {
     quoteSelections,
     callSelections,
+    pricingSelections,
     hasTypedQuestion,
     askQuestion,
     setAskQuestion,
     formData,
     isSubmittingLead,
-    pricingSelections,
   };
 
   const flowVisibility = {
@@ -836,7 +837,6 @@ const handleSelectPricingTimeline = (option) => {
           className={`chatbox-container ${
             activeFlowId === "community" ? "community-expanded" : ""
           }`}
-
           role="dialog"
           aria-label="Chat with us"
           style={themeVars}
@@ -852,9 +852,8 @@ const handleSelectPricingTimeline = (option) => {
             <div className="chat-scroll-stack">
               <ChatMessages messages={messages} />
 
-              {/* Animated typing indicator while checking user info */}
-                {showStartupTyping && (
-                  <div className="chat-message bot typing-indicator">
+              {showStartupTyping && (
+                <div className="chat-message bot typing-indicator">
                   <span></span>
                   <span></span>
                   <span></span>
@@ -876,11 +875,8 @@ const handleSelectPricingTimeline = (option) => {
                 flowVisibility={flowVisibility}
                 flowHandlers={flowHandlers}
                 formatDateLabel={formatDateLabel}
-
-                // Pass Back button handler into FlowRenderer
                 onBack={handleBackToMainMenu}
               />
-
             </div>
           </div>
 

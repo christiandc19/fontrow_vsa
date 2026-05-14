@@ -9,10 +9,9 @@ export default function OptionsFlow({ config, onBack }) {
     config?.optionsIntro || "Choose a living option below to learn more.";
 
   useEffect(() => {
-    // Show typing dots first, then reveal the Living Options content.
     const timer = setTimeout(() => {
       setIsTyping(false);
-    }, 500);
+    }, 1400);
 
     return () => clearTimeout(timer);
   }, []);
@@ -37,9 +36,7 @@ export default function OptionsFlow({ config, onBack }) {
 
   return (
     <div className="options-flow-container options-slide-up">
-      <div className="chat-message bot options-message">
-        {optionsIntro}
-      </div>
+      <div className="chat-message bot options-message">{optionsIntro}</div>
 
       <div className="chatbox-ctas options-buttons">
         {options.map((option) => (

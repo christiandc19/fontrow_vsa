@@ -15,37 +15,26 @@ export default function FlowRenderer({
   flowVisibility,
   flowHandlers,
   formatDateLabel,
-  // Back button handler from ChatBox
   onBack,
-}) 
-
-{
-
-const {
-  mergedConfig,
-  services,
-  projects,
-  quoteCfg,
-  scheduleCfg,
-  askCfg,
-
-  // Pricing flow config
-  pricingCfg,
-
-  quoteProjectTypes,
-  quoteClientTypes,
-  quoteTimelines,
-  callTimeSlots,
-} = flowData;
-
+}) {
+  const {
+    mergedConfig,
+    services,
+    projects,
+    quoteCfg,
+    scheduleCfg,
+    askCfg,
+    pricingCfg,
+    quoteProjectTypes,
+    quoteClientTypes,
+    quoteTimelines,
+    callTimeSlots,
+  } = flowData;
 
   const {
     quoteSelections,
     callSelections,
-
-    // Pricing flow selections
     pricingSelections,
-
     hasTypedQuestion,
     askQuestion,
     setAskQuestion,
@@ -66,11 +55,9 @@ const {
     handleServiceSelect,
     handleProjectSelect,
     handleCommunityFlowSelect,
-    // Pricing flow handlers
     handleSelectPricingLivingOption,
     handleSelectPricingInquiryFor,
     handleSelectPricingTimeline,
-
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -99,7 +86,6 @@ const {
           onSelect={handleProjectSelect}
         />
       );
-
 
     case "quote":
       return (
@@ -158,12 +144,7 @@ const {
       );
 
     case "options":
-      return (
-        <OptionsFlow
-          config={mergedConfig}
-          onBack={onBack}
-        />
-      );
+      return <OptionsFlow config={mergedConfig} onBack={onBack} />;
 
     case "community":
       return (
@@ -188,7 +169,7 @@ const {
         />
       );
 
-        default:
-          return null;
-      }
-    }
+    default:
+      return null;
+  }
+}

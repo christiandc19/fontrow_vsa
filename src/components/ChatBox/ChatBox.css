@@ -1,6 +1,5 @@
 /* ========================================
    THEME VARIABLES
-   These can be overridden inline from React
 ======================================== */
 .chatbox-container,
 .chat-launcher {
@@ -184,15 +183,26 @@
   width: 100%;
 }
 
-.chat-messages {
+.chat-messages,
+.flow-section,
+.schedule-section,
+.pricing-section,
+.step-block,
+.step-cta-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
+
+.chat-messages { gap: 12px; }
+.flow-section,
+.schedule-section,
+.pricing-section { gap: 14px; }
+.step-block { gap: 10px; }
+.step-cta-list { gap: 9px; }
 
 .chat-message {
   width: 75%;
-  border-radius: 20px 20px 20px 0px;
+  border-radius: 20px 20px 20px 0;
   padding: 12px 15px;
   font-size: 14px;
   line-height: 1.45;
@@ -242,7 +252,7 @@
 }
 
 /* ========================================
-   FLOW NAVIGATION
+   FLOW NAVIGATION / QUESTIONS / BUTTONS
 ======================================== */
 .mainmenu-bubble-nav,
 .bubble-group {
@@ -282,28 +292,12 @@
   color: var(--chat-text-light);
 }
 
-.flow-section,
-.schedule-section,
-.pricing-section,
-.step-block,
-.step-cta-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.flow-section,
-.schedule-section,
-.pricing-section { gap: 14px; }
-.step-block { gap: 10px; }
-.step-cta-list { gap: 9px; }
-.flow-block { margin-top: 12px; }
-
 .step-question {
   font-size: 14px;
   color: var(--chat-text-dark);
   line-height: 1.45;
   padding: 1rem;
-  border-radius: 20px 20px 20px 0px;
+  border-radius: 20px 20px 20px 0;
   font-style: italic;
   background-color: rgba(147, 213, 243, 0.466);
   width: 75%;
@@ -327,18 +321,41 @@
 
 .step-cta-btn:hover,
 .cta-btn:hover,
-.back-menu-btn:hover {
+.back-menu-btn:hover,
+.step-cta-btn.selected {
   background: var(--chat-primary-hover);
   color: var(--chat-text-light);
 }
 
-.back-menu-btn {
-  margin: 0;
-  min-height: 42px;
+.chatbox-ctas {
+  padding: 14px 16px 16px;
+  background: #fff;
+  border-top: 1px solid #e6e6e6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.step-cta-btn.selected {
-  background: var(--chat-primary-hover);
+/* ========================================
+   SELECTED PRICING ANSWERS
+======================================== */
+.selected-answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.selected-answer-pill {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: none;
+  background: var(--chat-primary);
+  color: var(--chat-text-light);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 /* ========================================
@@ -460,37 +477,6 @@
 .ask-textarea {
   resize: none;
   min-height: 92px;
-}
-
-.existing-user-info {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 14px;
-  padding: 16px;
-  margin: 12px 0;
-}
-
-.existing-user-info p {
-  margin: 8px 0;
-  font-size: 14px;
-  color: #495057;
-}
-
-.existing-user-info strong {
-  color: var(--chat-text-dark);
-  font-weight: 700;
-}
-
-/* ========================================
-   CTA BUTTON CONTAINERS
-======================================== */
-.chatbox-ctas {
-  padding: 14px 16px 16px;
-  background: #fff;
-  border-top: 1px solid #e6e6e6;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 /* ========================================
@@ -682,24 +668,6 @@
   gap: 10px;
 }
 
-.options-flow-container .cta-btn {
-  width: 100%;
-  min-height: 42px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: none;
-  background: var(--chat-primary);
-  color: var(--chat-text-light);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.options-flow-container .cta-btn:hover {
-  background: var(--chat-primary-hover);
-}
-
 .options-slide-up {
   animation: optionsSlideUp 0.45s ease-out both;
 }
@@ -728,10 +696,22 @@
   height: 300px;
 }
 
-.community-image {
+.community-image,
+.community-image-fallback {
   width: 100%;
   height: 100%;
+}
+
+.community-image {
   object-fit: cover;
+}
+
+.community-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chat-text-muted);
+  font-size: 14px;
 }
 
 .gallery-arrow {
@@ -777,7 +757,6 @@
 
 /* ========================================
    COMMUNITY EXPANDED MODE - FULLSCREEN
-   View Community becomes a full-page modal layout.
 ======================================== */
 .chatbox-container.community-expanded {
   position: fixed;
@@ -821,13 +800,6 @@
   height: 100%;
   border-radius: 22px;
   overflow: hidden;
-}
-
-.chatbox-container.community-expanded .community-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
 }
 
 .chatbox-container.community-expanded .community-actions {
@@ -963,24 +935,4 @@
     height: 38px;
     margin-right: 6px;
   }
-}
-
-/* Selected pricing answers become small pills */
-.selected-answer-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.selected-answer-pill {
-  padding: 9px 14px;
-  border-radius: 999px;
-  border: none;
-  background: var(--chat-primary);
-  color: var(--chat-text-light);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
