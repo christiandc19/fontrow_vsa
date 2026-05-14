@@ -61,7 +61,7 @@ export default function ScheduleFlow({
         </div>
       )}
 
-      {showScheduleForm && (
+      {callSelections.date && callSelections.time && (
         <div className="step-block">
           <div className="step-question">
             {scheduleCfg.contactPrompt ||
@@ -99,33 +99,6 @@ export default function ScheduleFlow({
         </div>
       )}
 
-      {showScheduleSubmit && (
-        <div className="step-block">
-          <div className="step-question">
-            {scheduleCfg.returningPrompt ||
-              `Welcome back! We'll confirm your call on ${formatDateLabel(
-                callSelections.date
-              )} at ${callSelections.time}.`}
-          </div>
-
-          <div className="existing-user-info">
-            <p><strong>Name:</strong> {formData.name}</p>
-            <p><strong>Email:</strong> {formData.email}</p>
-            <p><strong>Phone:</strong> {formData.phone}</p>
-
-            <button
-              className="cta-btn"
-              onClick={onSubmitForm}
-              disabled={isSubmittingLead}
-              type="button"
-            >
-              {isSubmittingLead
-                ? "Sending…"
-                : scheduleCfg.returningButton || "Confirm Call"}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

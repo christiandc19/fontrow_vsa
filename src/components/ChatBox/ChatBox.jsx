@@ -142,6 +142,9 @@ export default function ChatBox({ config = {} }) {
   const quoteCfg = mergedConfig?.quote || {};
   const askCfg = mergedConfig?.ask || {};
 
+  // Pricing flow configuration from the client config
+  const pricingCfg = mergedConfig?.pricing || {};
+
   const quoteProjectTypes = quoteCfg.projectTypes || [];
   const quoteClientTypes = quoteCfg.clientTypes || [];
   const quoteTimelines = quoteCfg.timelines || [];
@@ -159,6 +162,13 @@ export default function ChatBox({ config = {} }) {
     time: null,
   };
 
+  // Pricing flow selections
+  const initialPricing = {
+  livingOption: null,
+  inquiryFor: null,
+  timeline: null,
+};
+
   const [isOpen, setIsOpen] = useState(false);
   const [launcherMode, setLauncherMode] = useState("circle");
   const [messages, setMessages] = useState([]);
@@ -172,6 +182,11 @@ export default function ChatBox({ config = {} }) {
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
   const [pendingConversations, setPendingConversations] = useState([]);
+
+  // Controls the startup typing animation
+  const [showStartupTyping, setShowStartupTyping] = useState(false);
+
+  const [pricingSelections, setPricingSelections] = useState(initialPricing);
 
   const isSchedulingFlow =
     activeFlowId === "schedule" || activeFlowId === "demo";
@@ -194,11 +209,24 @@ export default function ChatBox({ config = {} }) {
   useEffect(() => {
     if (!scrollRef.current) return;
 
-    scrollRef.current.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, activeFlowId, quoteSelections, callSelections, hasTypedQuestion]);
+    // Small delay lets the next Pricing question render first,
+    // then scrolls the chat to the newest question.
+    const timer = setTimeout(() => {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [
+    messages,
+    activeFlowId,
+    quoteSelections,
+    callSelections,
+    pricingSelections,
+    hasTypedQuestion,
+  ]);
 
 
   const openLink = (url) => {
@@ -288,14 +316,11 @@ export default function ChatBox({ config = {} }) {
   const openChat = async () => {
     setIsOpen(true);
 
-    setMessages([
-      {
-        id: "welcome",
-        sender: "bot",
-        text: welcomeMessage,
-        isWelcome: true,
-      },
-    ]);
+    // Clear previous messages first
+    setMessages([]);
+
+    // Show typing animation immediately
+    setShowStartupTyping(true);
 
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
@@ -305,7 +330,28 @@ export default function ChatBox({ config = {} }) {
     setFoundUserData(null);
     setPendingConversations([]);
 
+    // Simulated AI typing delay
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+
+    // Hide typing animation
+    setShowStartupTyping(false);
+
+    // Show welcome message AFTER typing
+    setMessages([
+      {
+        id: "welcome",
+        sender: "bot",
+        text: welcomeMessage,
+        isWelcome: true,
+      },
+    ]);
+
+    // Small delay so the typing animation feels natural
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+
     const userData = await checkUserByIP();
+
+
 
     if (!userData) {
       setFormData(initialForm);
@@ -372,6 +418,33 @@ export default function ChatBox({ config = {} }) {
     syncKnownUserIntoForm();
   };
 
+    const handleCommunityFlowSelect = (flowId) => {
+    // Save which community action the user clicked
+    saveConversationMessage(`Community action: ${flowId}`, "user");
+
+    // Switch from View Community to the selected chatbot flow
+    setActiveFlowId(flowId);
+
+    // Reset quote selections if this is not the quote flow
+    if (flowId !== "quote") {
+      setQuoteSelections(initialQuote);
+    }
+
+    // Reset schedule selections if this is not schedule/demo
+    if (flowId !== "schedule" && flowId !== "demo") {
+      setCallSelections(initialCall);
+    }
+
+    // Reset ask question state if this is not ask flow
+    if (flowId !== "ask") {
+      setAskQuestion("");
+      setHasTypedQuestion(false);
+    }
+
+    // Prefill contact form if returning user data exists
+    syncKnownUserIntoForm();
+  };
+
   const handleServiceSelect = (label) => {
     const svc = services.find((s) => s.label === label);
     if (!svc) return;
@@ -402,6 +475,36 @@ export default function ChatBox({ config = {} }) {
     saveConversationMessage(`Quote - Timeline: ${option}`, "user");
     setQuoteSelections((prev) => ({ ...prev, timeline: option }));
   };
+
+  const handleSelectPricingLivingOption = (option) => {
+  saveConversationMessage(`Pricing - Living Option: ${option}`, "user");
+
+  setPricingSelections((prev) => ({
+    ...prev,
+    livingOption: option,
+    inquiryFor: null,
+    timeline: null,
+  }));
+};
+
+const handleSelectPricingInquiryFor = (option) => {
+  saveConversationMessage(`Pricing - For: ${option}`, "user");
+
+  setPricingSelections((prev) => ({
+    ...prev,
+    inquiryFor: option,
+    timeline: null,
+  }));
+};
+
+const handleSelectPricingTimeline = (option) => {
+  saveConversationMessage(`Pricing - Timeline: ${option}`, "user");
+
+  setPricingSelections((prev) => ({
+    ...prev,
+    timeline: option,
+  }));
+};
 
   const handleSelectCallDate = (isoDate) => {
     const label = activeFlowId === "demo" ? "Demo" : "Call";
@@ -434,8 +537,12 @@ export default function ChatBox({ config = {} }) {
 
   const resetAllFlows = () => {
     setActiveFlowId(null);
+
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
+
+    setPricingSelections(initialPricing);
+
     setAskQuestion("");
     setHasTypedQuestion(false);
 
@@ -460,6 +567,18 @@ export default function ChatBox({ config = {} }) {
 
       if (activeFlowId === "quote") {
         conversationMessage = `Quote Request: ${JSON.stringify(quoteSelections)}`;
+      } else if (activeFlowId === "pricing") {
+      conversationMessage = `
+      Pricing Request
+
+      Name: ${formData.name}
+      Email: ${formData.email}
+      Phone: ${formData.phone}
+
+      Living Option: ${pricingSelections.livingOption}
+      For: ${pricingSelections.inquiryFor}
+      Timeline: ${pricingSelections.timeline}
+      `;      
       } else if (activeFlowId === "schedule") {
         conversationMessage = `Call Request: ${callSelections.date} ${callSelections.time}`;
       } else if (activeFlowId === "demo") {
@@ -519,7 +638,10 @@ export default function ChatBox({ config = {} }) {
             flow: activeFlowId,
             quoteSelections,
             callSelections,
+            pricingSelections,
           },
+          source: "chatbot",
+          formKey: activeFlowId || "chatbot",
           conversations: [
             ...pendingConversations,
             {
@@ -546,9 +668,11 @@ export default function ChatBox({ config = {} }) {
 
       let botReply = "";
 
-      if (activeFlowId === "ask") {
-        botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
-      } else if (isSchedulingFlow && callSelections.date && callSelections.time) {
+        if (activeFlowId === "ask") {
+          botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+        } else if (activeFlowId === "pricing") {
+          botReply = `Thanks, ${formData.name}! We received your pricing request and our team will follow up shortly.`;
+        } else if (isSchedulingFlow && callSelections.date && callSelections.time) {
         const requestLabel = activeFlowId === "demo" ? "demo" : "call";
 
         botReply = `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
@@ -621,6 +745,7 @@ export default function ChatBox({ config = {} }) {
     quoteClientTypes,
     quoteTimelines,
     callTimeSlots,
+    pricingCfg,
   };
 
   const flowState = {
@@ -631,6 +756,7 @@ export default function ChatBox({ config = {} }) {
     setAskQuestion,
     formData,
     isSubmittingLead,
+    pricingSelections,
   };
 
   const flowVisibility = {
@@ -645,6 +771,7 @@ export default function ChatBox({ config = {} }) {
   const flowHandlers = {
     handleServiceSelect,
     handleProjectSelect,
+    handleCommunityFlowSelect,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -653,6 +780,9 @@ export default function ChatBox({ config = {} }) {
     handleAskQuestionSubmit,
     handleFormChange,
     handleSubmitForm,
+    handleSelectPricingLivingOption,
+    handleSelectPricingInquiryFor,
+    handleSelectPricingTimeline,
   };
 
   return (
@@ -703,7 +833,10 @@ export default function ChatBox({ config = {} }) {
 
       {isOpen && (
         <div
-          className="chatbox-container"
+          className={`chatbox-container ${
+            activeFlowId === "community" ? "community-expanded" : ""
+          }`}
+
           role="dialog"
           aria-label="Chat with us"
           style={themeVars}
@@ -719,8 +852,13 @@ export default function ChatBox({ config = {} }) {
             <div className="chat-scroll-stack">
               <ChatMessages messages={messages} />
 
-              {isCheckingIP && (
-                <div className="chat-message bot">Checking your info…</div>
+              {/* Animated typing indicator while checking user info */}
+                {showStartupTyping && (
+                  <div className="chat-message bot typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
               )}
 
               {activeFlowId && (
@@ -738,7 +876,11 @@ export default function ChatBox({ config = {} }) {
                 flowVisibility={flowVisibility}
                 flowHandlers={flowHandlers}
                 formatDateLabel={formatDateLabel}
+
+                // Pass Back button handler into FlowRenderer
+                onBack={handleBackToMainMenu}
               />
+
             </div>
           </div>
 
@@ -747,16 +889,6 @@ export default function ChatBox({ config = {} }) {
             visible={showMainMenuButtons}
             onSelect={handleMainMenuSelect}
           />
-
-          {activeFlowId && (
-            <button
-              className="back-menu-btn"
-              onClick={handleBackToMainMenu}
-              type="button"
-            >
-              Back to Main Menu
-            </button>
-          )}
         </div>
       )}
     </>
