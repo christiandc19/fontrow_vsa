@@ -35,13 +35,10 @@ const evergreenHeightsConfig = {
       heroImages: {
         "senior-living":
           "https://cdn.websmartassistant.com/survey/images/senior-living-survey-hero.webp",
-
         downsizing:
           "https://cdn.websmartassistant.com/survey/images/downsizing-survey-hero.webp",
-
         "memory-support":
           "https://cdn.websmartassistant.com/survey/images/memory-survey-hero.webp",
-
         affordability:
           "https://cdn.websmartassistant.com/survey/images/affordability-survey-hero.webp",
       },
@@ -96,41 +93,33 @@ const evergreenHeightsConfig = {
       label: "Schedule a Visit",
       type: "flow",
     },
-
-    // Opens the Living Options flow
     {
       id: "options",
       label: "Living Options",
       type: "flow",
     },
-
-    // Opens the expanded community gallery view
     {
       id: "community",
       label: "View Community",
       type: "flow",
     },
-
     {
       id: "pricing",
       label: "Pricing",
       type: "flow",
     },
-
     {
       id: "floorplans",
       label: "View Floor Plans",
       type: "link",
       url: "#",
     },
-
     {
       id: "contact",
       label: "Contact Us",
       type: "link",
       url: "#",
     },
-
     {
       id: "ask",
       label: "Ask a Question",
@@ -142,48 +131,41 @@ const evergreenHeightsConfig = {
   projects: [],
   quote: {},
 
-  /*
-        Community gallery content used by the View Community flow.
-      */
-      community: {
-        images: [
-          {
-            id: "community-1",
-            src: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-            alt: "Evergreen Heights apartment interior",
-          },
-
-          {
-            id: "community-2",
-            src: "https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop",
-            alt: "Evergreen Heights living room",
-          },
-        ],
-
-        buttons: [
-          {
-            id: "pricing",
-            label: "Pricing",
-            type: "flow",
-            flowId: "pricing",
-          },
-
-          {
-            id: "schedule",
-            label: "Schedule A Visit",
-            type: "flow",
-            flowId: "schedule",
-          },
-
-          {
-            id: "ask",
-            label: "Ask A Question",
-            type: "flow",
-            flowId: "ask",
-          },
-        ],
-
+  community: {
+    images: [
+      {
+        id: "community-1",
+        src: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+        alt: "Evergreen Heights apartment interior",
       },
+      {
+        id: "community-2",
+        src: "https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop",
+        alt: "Evergreen Heights living room",
+      },
+    ],
+
+    buttons: [
+      {
+        id: "pricing",
+        label: "Pricing",
+        type: "flow",
+        flowId: "pricing",
+      },
+      {
+        id: "schedule",
+        label: "Schedule A Visit",
+        type: "flow",
+        flowId: "schedule",
+      },
+      {
+        id: "ask",
+        label: "Ask A Question",
+        type: "flow",
+        flowId: "ask",
+      },
+    ],
+  },
 
   pricing: {
     q1: "What living option are you interested in?",
@@ -217,36 +199,23 @@ const evergreenHeightsConfig = {
     contactPrompt:
       "Share your contact details and we’ll help you understand pricing and next steps.",
 
-    returningPrompt:
-      "Thanks! We’ll follow up with pricing information shortly.",
-
     returningButton: "Request Pricing",
   },
 
-
-  /*
-    Intro text shown above the Living Options buttons.
-  */
   optionsIntro:
     "A Life Plan Community offers Independent Living and a continuum of on-site care. Choose an option below to learn more.",
 
-  /*
-    Living Options buttons.
-    Each button redirects to a webpage instead of showing another message.
-  */
   options: [
     {
       id: "independent-living",
       label: "Independent Living",
       url: "/independent-living",
     },
-
     {
       id: "assisted-living",
       label: "Assisted Living",
       url: "/assisted-living",
     },
-
     {
       id: "skilled-nursing",
       label: "Skilled Nursing",
@@ -256,18 +225,11 @@ const evergreenHeightsConfig = {
 
   schedule: {
     intro: "Let’s schedule a time to visit Evergreen Heights.",
-
     q1: "What day works best for your tour?",
-
     q2: "What time works best?",
-
     contactPrompt:
-      "Share your contact details and we’ll confirm your tour.",
-
-    returningPrompt: "We’ll confirm your visit shortly.",
-
+      "Please confirm or update your contact details and we’ll confirm your tour.",
     returningButton: "Schedule Tour",
-
     timeSlots: [
       "9:00 AM",
       "10:00 AM",
@@ -280,18 +242,12 @@ const evergreenHeightsConfig = {
 
   ask: {
     q1: "What would you like to know about Evergreen Heights?",
-
     placeholder:
       "Ex: pricing, availability, levels of care, amenities, tours…",
-
     contactPrompt:
-      "Please share your contact information so our team can follow up with you.",
-
-    returningPrompt:
-      "We found your contact information. Please confirm it, then send your message.",
-
+      "Please confirm or update your contact information so our team can follow up with you.",
     returningButton: "Send Message",
   },
-  };
+};
 
 export default evergreenHeightsConfig;

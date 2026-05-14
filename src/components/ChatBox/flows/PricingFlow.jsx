@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from "react";
 
+const scrollChatToBottom = () => {
+  setTimeout(() => {
+    const chatMain = document.querySelector(".chatbox-main");
+
+    chatMain?.scrollTo({
+      top: chatMain.scrollHeight,
+      behavior: "smooth",
+    });
+  }, 50);
+};
+
 export default function PricingFlow({
   pricingCfg,
   pricingSelections,
   onSelectLivingOption,
   onSelectInquiryFor,
   onSelectTimeline,
-
-// Contact form props
   formData,
   onFormChange,
   onSubmitForm,
@@ -16,165 +25,114 @@ export default function PricingFlow({
   const livingOptions = pricingCfg?.livingOptions || [];
   const inquiryForOptions = pricingCfg?.inquiryForOptions || [];
   const timelineOptions = pricingCfg?.timelineOptions || [];
-  // Controls delayed question reveals
+
   const [showQuestion1, setShowQuestion1] = useState(false);
   const [showQuestion2, setShowQuestion2] = useState(false);
   const [showQuestion3, setShowQuestion3] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
 
-
-    // Reveal Question 1 on initial load
-    useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
-        setShowQuestion1(true);
-
-        setTimeout(() => {
-        document
-            .querySelector(".chatbox-main")
-            ?.scrollTo({
-            top: document.querySelector(".chatbox-main")?.scrollHeight,
-            behavior: "smooth",
-            });
-        }, 50);
-
+      setShowQuestion1(true);
+      scrollChatToBottom();
     }, 1400);
 
-  return () => clearTimeout(timer);
-}, []);
+    return () => clearTimeout(timer);
+  }, []);
 
-    // Reveal Question 2 after selecting living option
-    useEffect(() => {
+  useEffect(() => {
     if (!pricingSelections.livingOption) {
-        setShowQuestion2(false);
-        return;
+      setShowQuestion2(false);
+      return;
     }
 
     const timer = setTimeout(() => {
-        setShowQuestion2(true);
-        // Auto-scroll after question appears
-        setTimeout(() => {
-        document
-            .querySelector(".chatbox-main")
-            ?.scrollTo({
-            top: document.querySelector(".chatbox-main")?.scrollHeight,
-            behavior: "smooth",
-            });
-        }, 50);
-
+      setShowQuestion2(true);
+      scrollChatToBottom();
     }, 1400);
 
-  return () => clearTimeout(timer);
+    return () => clearTimeout(timer);
+  }, [pricingSelections.livingOption]);
 
-}, [pricingSelections.livingOption]);
-
-
-    // Reveal Question 3 after selecting inquiryFor
-    useEffect(() => {
+  useEffect(() => {
     if (!pricingSelections.inquiryFor) {
-        setShowQuestion3(false);
-        return;
+      setShowQuestion3(false);
+      return;
     }
 
     const timer = setTimeout(() => {
-        setShowQuestion3(true);
-
-        // Auto-scroll after question appears
-        setTimeout(() => {
-        document
-            .querySelector(".chatbox-main")
-            ?.scrollTo({
-            top: document.querySelector(".chatbox-main")?.scrollHeight,
-            behavior: "smooth",
-            });
-        }, 50);
-
+      setShowQuestion3(true);
+      scrollChatToBottom();
     }, 1400);
 
     return () => clearTimeout(timer);
-    }, [pricingSelections.inquiryFor]);
+  }, [pricingSelections.inquiryFor]);
 
-
-    // Reveal contact form after selecting timeline
-    useEffect(() => {
+  useEffect(() => {
     if (!pricingSelections.timeline) {
-        setShowContactForm(false);
-        return;
+      setShowContactForm(false);
+      return;
     }
 
     const timer = setTimeout(() => {
-        setShowContactForm(true);
-
-        // Auto-scroll after question appears
-        setTimeout(() => {
-        document
-            .querySelector(".chatbox-main")
-            ?.scrollTo({
-            top: document.querySelector(".chatbox-main")?.scrollHeight,
-            behavior: "smooth",
-            });
-        }, 50);
-
+      setShowContactForm(true);
+      scrollChatToBottom();
     }, 1400);
 
     return () => clearTimeout(timer);
-    }, [pricingSelections.timeline]);
-
+  }, [pricingSelections.timeline]);
 
   return (
     <div className="pricing-flow flow-section">
-
-        {/* Typing before Question 1 */}
-        {!showQuestion1 && (
+      {!showQuestion1 && (
         <div className="chat-message bot typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
-        )}
-        {/* STEP 1 */}
-        {showQuestion1 && (
+      )}
+
+      {showQuestion1 && (
         <div className="step-block">
-        <div className="step-question">
-          {pricingCfg?.q1 || "What living option are you interested in?"}
-        </div>
-
-        {/* If user already selected an answer, show it as a small pill */}
-        {pricingSelections.livingOption ? (
-          <div className="selected-answer-row">
-            <button
-              type="button"
-              className="selected-answer-pill"
-              onClick={() => onSelectLivingOption(pricingSelections.livingOption)}
-            >
-              {pricingSelections.livingOption}
-            </button>
+          <div className="step-question">
+            {pricingCfg?.q1 || "What living option are you interested in?"}
           </div>
-        ) : (
-          <div className="step-cta-list">
-            {livingOptions.map((option) => (
+
+          {pricingSelections.livingOption ? (
+            <div className="selected-answer-row">
               <button
-                key={option}
                 type="button"
-                className="step-cta-btn"
-                onClick={() => onSelectLivingOption(option)}
+                className="selected-answer-pill"
+                onClick={() => onSelectLivingOption(pricingSelections.livingOption)}
               >
-                {option}
+                {pricingSelections.livingOption}
               </button>
-            ))}
-          </div>
-        )}
-      </div>
-        )}
-
-        {pricingSelections.livingOption && !showQuestion2 && (
-        <div className="chat-message bot typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
+            </div>
+          ) : (
+            <div className="step-cta-list">
+              {livingOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className="step-cta-btn"
+                  onClick={() => onSelectLivingOption(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        )}
+      )}
 
-      {/* STEP 2: Who is this for? */}
+      {pricingSelections.livingOption && !showQuestion2 && (
+        <div className="chat-message bot typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      )}
+
       {showQuestion2 && (
         <div className="step-block">
           <div className="step-question">
@@ -208,16 +166,14 @@ export default function PricingFlow({
         </div>
       )}
 
-
       {pricingSelections.inquiryFor && !showQuestion3 && (
         <div className="chat-message bot typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
-        )}
+      )}
 
-      {/* STEP 3: Timeline */}
       {showQuestion3 && (
         <div className="step-block">
           <div className="step-question">
@@ -251,58 +207,58 @@ export default function PricingFlow({
         </div>
       )}
 
-        {pricingSelections.timeline && !showContactForm && (
+      {pricingSelections.timeline && !showContactForm && (
         <div className="chat-message bot typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
-        )}
+      )}
 
-        {/* STEP 4: Contact form */}
-            {showContactForm && (        
-            <div className="step-block">
-            <div className="step-question">
+      {showContactForm && (
+        <div className="step-block">
+          <div className="step-question">
             {pricingCfg?.contactPrompt ||
-                "Share your contact details and we’ll help you with pricing."}
-            </div>
+              "Share your contact details and we’ll help you with pricing."}
+          </div>
 
-            <form className="chat-form" onSubmit={onSubmitForm}>
+          <form className="chat-form" onSubmit={onSubmitForm}>
             <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={onFormChange}
-                required
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={onFormChange}
+              required
             />
 
             <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={onFormChange}
-                required
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={onFormChange}
+              required
             />
 
             <input
-                type="tel"
-                name="phone"
-                placeholder="Phone"
-                value={formData.phone}
-                onChange={onFormChange}
+              type="tel"
+              name="phone"
+              placeholder="Phone"
+              value={formData.phone}
+              onChange={onFormChange}
             />
 
-            <button type="submit" className="step-cta-btn" disabled={isSubmittingLead}>
-                {isSubmittingLead ? "Submitting..." : "Request Pricing"}
+            <button
+              type="submit"
+              className="step-cta-btn"
+              disabled={isSubmittingLead}
+            >
+              {isSubmittingLead ? "Submitting..." : "Request Pricing"}
             </button>
-            </form>
+          </form>
         </div>
-        )}
-
-
-
+      )}
     </div>
   );
 }

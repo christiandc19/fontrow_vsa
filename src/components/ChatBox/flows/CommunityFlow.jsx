@@ -1,35 +1,34 @@
 import React, { useState } from "react";
 
-export default function CommunityFlow({
-  community,
-  onSelectFlow,
-}) {
+export default function CommunityFlow({ community, onSelectFlow }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const images = community?.images || [];
-  const buttons = community?.buttons || [];
-
+  const images = Array.isArray(community?.images) ? community.images : [];
+  const buttons = Array.isArray(community?.buttons) ? community.buttons : [];
   const currentImage = images[activeImageIndex];
 
   const goNext = () => {
+    if (!images.length) return;
+
     setActiveImageIndex((prev) =>
       prev === images.length - 1 ? 0 : prev + 1
     );
   };
 
   const goPrev = () => {
+    if (!images.length) return;
+
     setActiveImageIndex((prev) =>
       prev === 0 ? images.length - 1 : prev - 1
     );
   };
 
   const handleButtonClick = (button) => {
-    // Opens website links
     if (button.type === "link" && button.url) {
       window.location.href = button.url;
+      return;
     }
 
-    // Opens another chatbot flow
     if (button.type === "flow" && button.flowId) {
       onSelectFlow(button.flowId);
     }
@@ -37,34 +36,42 @@ export default function CommunityFlow({
 
   return (
     <div className="community-flow">
-      {/* LEFT SIDE - IMAGE GALLERY */}
       <div className="community-gallery">
-        <button
-          type="button"
-          className="gallery-arrow left"
-          onClick={goPrev}
-        >
-          ‹
-        </button>
-
-        {currentImage && (
-          <img
-            src={currentImage.src}
-            alt={currentImage.alt}
-            className="community-image"
-          />
+        {images.length > 1 && (
+          <button
+            type="button"
+            className="gallery-arrow left"
+            onClick={goPrev}
+            aria-label="Previous community photo"
+          >
+            ‹
+          </button>
         )}
 
-        <button
-          type="button"
-          className="gallery-arrow right"
-          onClick={goNext}
-        >
-          ›
-        </button>
+        {currentImage ? (
+          <img
+            src={currentImage.src}
+            alt={currentImage.alt || "Community photo"}
+            className="community-image"
+          />
+        ) : (
+          <div className="community-image-fallback">
+            Community image coming soon
+          </div>
+        )}
+
+        {images.length > 1 && (
+          <button
+            type="button"
+            className="gallery-arrow right"
+            onClick={goNext}
+            aria-label="Next community photo"
+          >
+            ›
+          </button>
+        )}
       </div>
 
-      {/* RIGHT SIDE - CTA BUTTONS */}
       <div className="community-actions">
         {buttons.map((button) => (
           <button

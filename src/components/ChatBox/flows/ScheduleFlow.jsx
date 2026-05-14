@@ -10,13 +10,13 @@ export default function ScheduleFlow({
   formatDateLabel,
   onSelectCallDate,
   onSelectCallTime,
-  showScheduleForm,
-  showScheduleSubmit,
   formData,
   onFormChange,
   onSubmitForm,
   isSubmittingLead,
 }) {
+  const hasSelectedDateAndTime = !!(callSelections.date && callSelections.time);
+
   return (
     <div className="schedule-section">
       {scheduleCfg.intro && (
@@ -25,7 +25,7 @@ export default function ScheduleFlow({
 
       <div className="step-block">
         <div className="step-question">
-          {scheduleCfg.q1 || "What date would you like to schedule a call?"}
+          {scheduleCfg.q1 || "What date would you like to schedule a visit?"}
         </div>
 
         <ScheduleCalendar
@@ -47,10 +47,7 @@ export default function ScheduleFlow({
           </div>
 
           {!callSelections.time ? (
-            <StepCTAs
-              options={callTimeSlots}
-              onSelect={onSelectCallTime}
-            />
+            <StepCTAs options={callTimeSlots} onSelect={onSelectCallTime} />
           ) : (
             <BubbleStep
               options={callTimeSlots}
@@ -61,11 +58,11 @@ export default function ScheduleFlow({
         </div>
       )}
 
-      {callSelections.date && callSelections.time && (
+      {hasSelectedDateAndTime && (
         <div className="step-block">
           <div className="step-question">
             {scheduleCfg.contactPrompt ||
-              "Please share your contact details and we’ll confirm your call."}
+              "Please confirm or update your contact details and we’ll confirm your visit."}
           </div>
 
           <form className="chat-form" onSubmit={onSubmitForm}>
@@ -76,6 +73,7 @@ export default function ScheduleFlow({
               placeholder="First & Last Name"
               required
             />
+
             <input
               type="email"
               name="email"
@@ -84,6 +82,7 @@ export default function ScheduleFlow({
               placeholder="Email"
               required
             />
+
             <input
               type="tel"
               name="phone"
@@ -92,13 +91,15 @@ export default function ScheduleFlow({
               placeholder="Phone"
               required
             />
+
             <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-              {isSubmittingLead ? "Sending…" : "Submit"}
+              {isSubmittingLead
+                ? "Sending…"
+                : scheduleCfg.returningButton || "Schedule Visit"}
             </button>
           </form>
         </div>
       )}
-
     </div>
   );
 }
