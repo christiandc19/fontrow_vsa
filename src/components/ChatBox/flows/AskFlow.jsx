@@ -5,8 +5,6 @@ export default function AskFlow({
   hasTypedQuestion,
   askQuestion,
   setAskQuestion,
-  showAskForm,
-  showAskSubmit,
   formData,
   onFormChange,
   onAskQuestionSubmit,
@@ -30,18 +28,24 @@ export default function AskFlow({
               required
               rows="3"
             />
+
             <button className="cta-btn" type="submit">
               Continue
             </button>
           </form>
         </>
-      ) : showAskForm ? (
+      ) : (
         <>
           <div className="step-question">
             {askCfg.contactPrompt ||
-              "Please share your contact details so we can follow up."}
+              "Please confirm or update your contact information so our team can follow up."}
           </div>
 
+          {/* 
+            Always show editable contact fields.
+            If a returning user was found by IP, these fields may be prefilled.
+            The user can still change them before submitting.
+          */}
           <form className="chat-form" onSubmit={onSubmitForm}>
             <input
               name="name"
@@ -50,6 +54,7 @@ export default function AskFlow({
               placeholder="First & Last Name"
               required
             />
+
             <input
               type="email"
               name="email"
@@ -58,6 +63,7 @@ export default function AskFlow({
               placeholder="Email"
               required
             />
+
             <input
               type="tel"
               name="phone"
@@ -66,36 +72,15 @@ export default function AskFlow({
               placeholder="Phone"
               required
             />
+
             <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-              {isSubmittingLead ? "Sending…" : "Submit"}
+              {isSubmittingLead
+                ? "Sending…"
+                : askCfg.returningButton || "Send Message"}
             </button>
           </form>
         </>
-      ) : showAskSubmit ? (
-        <>
-          <div className="step-question">
-            {askCfg.returningPrompt ||
-              "Thanks! We’ll follow up with you about your question."}
-          </div>
-
-          <div className="existing-user-info">
-            <p><strong>Name:</strong> {formData.name}</p>
-            <p><strong>Email:</strong> {formData.email}</p>
-            <p><strong>Phone:</strong> {formData.phone}</p>
-
-            <button
-              className="cta-btn"
-              onClick={onSubmitForm}
-              disabled={isSubmittingLead}
-              type="button"
-            >
-              {isSubmittingLead
-                ? "Sending…"
-                : askCfg.returningButton || "Submit Question"}
-            </button>
-          </div>
-        </>
-      ) : null}
+      )}
     </div>
   );
 }

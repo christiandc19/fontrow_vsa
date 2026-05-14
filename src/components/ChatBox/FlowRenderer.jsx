@@ -5,6 +5,8 @@ import QuoteFlow from "./flows/QuoteFlow";
 import ScheduleFlow from "./flows/ScheduleFlow";
 import AskFlow from "./flows/AskFlow";
 import OptionsFlow from "./flows/OptionsFlow";
+import CommunityFlow from "./flows/CommunityFlow";
+import PricingFlow from "./flows/PricingFlow";
 
 export default function FlowRenderer({
   activeFlowId,
@@ -13,23 +15,37 @@ export default function FlowRenderer({
   flowVisibility,
   flowHandlers,
   formatDateLabel,
-}) {
-  const {
-    mergedConfig,
-    services,
-    projects,
-    quoteCfg,
-    scheduleCfg,
-    askCfg,
-    quoteProjectTypes,
-    quoteClientTypes,
-    quoteTimelines,
-    callTimeSlots,
-  } = flowData;
+  // Back button handler from ChatBox
+  onBack,
+}) 
+
+{
+
+const {
+  mergedConfig,
+  services,
+  projects,
+  quoteCfg,
+  scheduleCfg,
+  askCfg,
+
+  // Pricing flow config
+  pricingCfg,
+
+  quoteProjectTypes,
+  quoteClientTypes,
+  quoteTimelines,
+  callTimeSlots,
+} = flowData;
+
 
   const {
     quoteSelections,
     callSelections,
+
+    // Pricing flow selections
+    pricingSelections,
+
     hasTypedQuestion,
     askQuestion,
     setAskQuestion,
@@ -49,6 +65,12 @@ export default function FlowRenderer({
   const {
     handleServiceSelect,
     handleProjectSelect,
+    handleCommunityFlowSelect,
+    // Pricing flow handlers
+    handleSelectPricingLivingOption,
+    handleSelectPricingInquiryFor,
+    handleSelectPricingTimeline,
+
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -136,9 +158,37 @@ export default function FlowRenderer({
       );
 
     case "options":
-      return <OptionsFlow config={mergedConfig} />;
+      return (
+        <OptionsFlow
+          config={mergedConfig}
+          onBack={onBack}
+        />
+      );
 
-    default:
-      return null;
-  }
-}
+    case "community":
+      return (
+        <CommunityFlow
+          community={mergedConfig?.community}
+          onSelectFlow={handleCommunityFlowSelect}
+        />
+      );
+
+    case "pricing":
+      return (
+        <PricingFlow
+          pricingCfg={pricingCfg}
+          pricingSelections={pricingSelections}
+          onSelectLivingOption={handleSelectPricingLivingOption}
+          onSelectInquiryFor={handleSelectPricingInquiryFor}
+          onSelectTimeline={handleSelectPricingTimeline}
+          formData={formData}
+          onFormChange={handleFormChange}
+          onSubmitForm={handleSubmitForm}
+          isSubmittingLead={isSubmittingLead}
+        />
+      );
+
+        default:
+          return null;
+      }
+    }
