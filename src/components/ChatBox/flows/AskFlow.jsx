@@ -2,6 +2,7 @@ import React from "react";
 
 export default function AskFlow({
   askCfg,
+  showAskStart,
   hasTypedQuestion,
   askQuestion,
   setAskQuestion,
@@ -12,8 +13,15 @@ export default function AskFlow({
   isSubmittingLead,
 }) {
   return (
-    <div className="flow-section">
-      {!hasTypedQuestion ? (
+    <div className="flow-section ask-flow-section">
+      <div className="ask-flow-inner">
+      {!showAskStart ? (
+        <div className="chat-message bot typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      ) : !hasTypedQuestion ? (
         <>
           <div className="step-question">
             {askCfg.q1 || "What question do you have?"}
@@ -75,5 +83,6 @@ export default function AskFlow({
         </>
       )}
     </div>
+  </div>
   );
 }
