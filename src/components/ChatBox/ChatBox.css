@@ -59,7 +59,7 @@
    MAIN CHATBOX CONTAINER
 ======================================== */
 .chatbox-container {
-  width: 400px;
+  width: 350px;
   max-width: calc(100vw - 32px);
   height: 650px;
   max-height: calc(100vh - 32px);
@@ -218,7 +218,7 @@
 
   padding: 16px;
 
-  background: linear-gradient(180deg, #f7f7f8 0%, #f3f5f7 100%);
+  background: white;
 }
 
 .chat-scroll-stack {
@@ -434,12 +434,12 @@
 .chatbox-ctas {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 
   padding: 14px 16px 16px;
 
   background: #ffffff;
-  border-top: 1px solid #e6e6e6;
+
 }
 
 /* ========================================
@@ -667,7 +667,7 @@
 }
 
 .chat-launcher.pill {
-  width: 400px;
+  width: 350px;
   max-width: calc(100vw - 32px);
   height: 80px;
   min-height: 80px;
@@ -946,7 +946,7 @@
   padding: 14px 16px;
 
   border: none;
-  border-radius: 12px;
+  border-radius: 7px;
   background: var(--chat-primary);
   color: #ffffff;
 
