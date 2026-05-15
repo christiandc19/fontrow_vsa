@@ -10,8 +10,8 @@ const evergreenHeightsConfig = {
   welcomeMessage:
     "Hi there! How can we help you explore Evergreen Heights today?",
 
-  launcherTitle: "Evergreen Heights",
-  launcherSubtitle: "Chat with our team",
+  launcherTitle: "Smart Assistant",
+  launcherSubtitle: "Evergreen Heights",
 
   theme: {
     primary: "#2f5d50",
@@ -102,6 +102,11 @@ const evergreenHeightsConfig = {
       id: "community",
       label: "View Community",
       type: "flow",
+    },   
+    {
+      id: "community-life",
+      label: "Community Life",
+      type: "flow",
     },
     {
       id: "pricing",
@@ -114,6 +119,12 @@ const evergreenHeightsConfig = {
       type: "link",
       url: "#",
     },
+    {
+      id: "jobs",
+      label: "Job Inquiry",
+      type: "link",
+      url: "https://your-job-page-url.com",
+    },    
     {
       id: "contact",
       label: "Contact Us",
@@ -166,6 +177,81 @@ const evergreenHeightsConfig = {
       },
     ],
   },
+
+  communityLife: {
+  intro:
+    "Explore life at Evergreen Heights. Choose an option below to learn more.",
+
+  buttons: [
+    {
+      id: "about",
+      label: "About",
+      type: "link",
+      url: "#",
+    },
+    {
+      id: "amenities",
+      label: "Amenities",
+      type: "link",
+      url: "#",
+    },
+    {
+      id: "dining",
+      label: "Dining",
+      type: "flow",
+      flowId: "dining",
+    },
+    {
+      id: "events",
+      label: "Events",
+      type: "link",
+      url: "#",
+    },
+    {
+      id: "gallery",
+      label: "Gallery",
+      type: "link",
+      url: "#",
+    },
+  ],
+},
+
+dining: {
+  images: [
+    {
+      id: "dining-1",
+      src: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop",
+      alt: "Dining room",
+    },
+    {
+      id: "dining-2",
+      src: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1200&auto=format&fit=crop",
+      alt: "Dining experience",
+    },
+  ],
+
+  buttons: [
+    {
+      id: "pricing",
+      label: "Pricing",
+      type: "flow",
+      flowId: "pricing",
+    },
+    {
+      id: "schedule",
+      label: "Schedule A Visit",
+      type: "flow",
+      flowId: "schedule",
+    },
+    {
+      id: "ask",
+      label: "Ask A Question",
+      type: "flow",
+      flowId: "ask",
+    },
+  ],
+},
+
 
   pricing: {
     q1: "What living option are you interested in?",
@@ -224,7 +310,6 @@ const evergreenHeightsConfig = {
   ],
 
   schedule: {
-    intro: "Let’s schedule a time to visit Evergreen Heights.",
     q1: "What day works best for your tour?",
     q2: "What time works best?",
     contactPrompt:

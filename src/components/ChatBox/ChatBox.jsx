@@ -174,9 +174,15 @@ export default function ChatBox({ config = {} }) {
   const [callSelections, setCallSelections] = useState(initialCall);
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
+  // Controls the typing animation before Ask flow appears
+  const [showAskStart, setShowAskStart] = useState(false);  
   const [pendingConversations, setPendingConversations] = useState([]);
   const [showStartupTyping, setShowStartupTyping] = useState(false);
   const [pricingSelections, setPricingSelections] = useState(initialPricing);
+
+  // Controls whether all main menu buttons are shown.
+  // If false, larger menus will only show the first few buttons.
+  const [showAllMenuButtons, setShowAllMenuButtons] = useState(false);
 
   const isSchedulingFlow =
     activeFlowId === "schedule" || activeFlowId === "demo";
@@ -207,12 +213,12 @@ export default function ChatBox({ config = {} }) {
 
     return () => clearTimeout(timer);
   }, [
-    messages,
-    activeFlowId,
-    quoteSelections,
-    callSelections,
-    pricingSelections,
-    hasTypedQuestion,
+      messages,
+      activeFlowId,
+      quoteSelections,
+      callSelections,
+      pricingSelections,
+      hasTypedQuestion,
   ]);
 
   const openLink = (url) => {
@@ -320,6 +326,10 @@ export default function ChatBox({ config = {} }) {
   const openChat = async () => {
     setIsOpen(true);
     setMessages([]);
+    // Start each new chat with the collapsed menu again.
+    // This keeps large client menus clean when the chatbot is reopened.
+    setShowAllMenuButtons(false);
+
     setShowStartupTyping(true);
 
     setActiveFlowId(null);
@@ -395,10 +405,42 @@ export default function ChatBox({ config = {} }) {
   };
 
   const handleMainMenuSelect = (item) => {
+
+    if (item.id === "show-more") {
+      setShowAllMenuButtons(true);
+      return;
+    }
+
     saveConversationMessage(item.label, "user");
 
     if (item.type === "link") {
       openLink(item.url);
+      return;
+    }
+
+    // Ask flow typing indicator before showing question
+    if (item.id === "ask") {
+      setActiveFlowId("ask");
+
+      // Hide Ask flow first
+      setShowAskStart(false);
+
+      resetFlowSelections("ask");
+      syncKnownUserIntoForm();
+
+      // Show typing indicator briefly
+      setTimeout(() => {
+        setShowAskStart(true);
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }, 100);
+
+      }, 1400);
+
       return;
     }
 
@@ -713,6 +755,27 @@ Question: ${askQuestion}`;
   };
 
   const showMainMenuButtons = !activeFlowId;
+  // If a client has 7 or more menu buttons,
+  // only show the first 4 buttons at first.
+  // This keeps large menus from feeling crowded.
+  const shouldCollapseMenu = mainMenu.length >= 7;
+
+  // These are the buttons actually shown in the chatbot.
+  // Small menus show everything.
+  // Large menus show only the first 4 until "Show More" is clicked.
+  // Adds "Show More" as part of the same menu button group.
+  // This keeps all buttons inside MainMenuButtons and prevents layout bugs.
+  const visibleMainMenuButtons =
+    shouldCollapseMenu && !showAllMenuButtons
+      ? [
+          ...mainMenu.slice(0, 4),
+          {
+            id: "show-more",
+            label: "Show More",
+            type: "action",
+          },
+        ]
+      : mainMenu;
   const showQuoteSection = activeFlowId === "quote";
   const showScheduleSection = isSchedulingFlow;
   const showAskSection = activeFlowId === "ask";
@@ -758,6 +821,7 @@ Question: ${askQuestion}`;
     setAskQuestion,
     formData,
     isSubmittingLead,
+    showAskStart,
   };
 
   const flowVisibility = {
@@ -834,13 +898,17 @@ Question: ${askQuestion}`;
 
       {isOpen && (
         <div
-          className={`chatbox-container ${
-            activeFlowId === "community" ? "community-expanded" : ""
-          }`}
-          role="dialog"
-          aria-label="Chat with us"
-          style={themeVars}
-        >
+          className={`chatbox-container
+            ${mainMenu.length >= 7 ? "chatbox-tall" : ""}
+            ${activeFlowId === "community" || activeFlowId === "dining"
+              ? "community-expanded"
+              : ""}
+          `}
+          style={{
+            ...themeVars,
+            "--chatbox-open-height": mainMenu.length >= 7 && showAllMenuButtons ? "760px" : "650px",
+          }}
+>
           <ChatHeader
             onClose={closeChat}
             title={headerTitle}
@@ -849,6 +917,7 @@ Question: ${askQuestion}`;
           />
 
           <div className="chatbox-main" ref={scrollRef}>
+
             <div className="chat-scroll-stack">
               <ChatMessages messages={messages} />
 
@@ -881,10 +950,12 @@ Question: ${askQuestion}`;
           </div>
 
           <MainMenuButtons
-            items={mainMenu}
+            items={visibleMainMenuButtons}
             visible={showMainMenuButtons}
             onSelect={handleMainMenuSelect}
+            className={showAllMenuButtons ? "menu-expanded-animate" : ""}
           />
+
         </div>
       )}
     </>

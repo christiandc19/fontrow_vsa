@@ -7,6 +7,7 @@ import AskFlow from "./flows/AskFlow";
 import OptionsFlow from "./flows/OptionsFlow";
 import CommunityFlow from "./flows/CommunityFlow";
 import PricingFlow from "./flows/PricingFlow";
+import CommunityLifeFlow from "./flows/CommunityLifeFlow";
 
 export default function FlowRenderer({
   activeFlowId,
@@ -40,6 +41,9 @@ export default function FlowRenderer({
     setAskQuestion,
     formData,
     isSubmittingLead,
+
+    // Ask flow typing animation
+    showAskStart,
   } = flowState;
 
   const {
@@ -130,6 +134,7 @@ export default function FlowRenderer({
       return (
         <AskFlow
           askCfg={askCfg}
+          showAskStart={showAskStart}
           hasTypedQuestion={hasTypedQuestion}
           askQuestion={askQuestion}
           setAskQuestion={setAskQuestion}
@@ -154,6 +159,14 @@ export default function FlowRenderer({
         />
       );
 
+    case "dining":
+      return (
+        <CommunityFlow
+          community={mergedConfig?.dining}
+          onSelectFlow={handleCommunityFlowSelect}
+        />
+      );
+
     case "pricing":
       return (
         <PricingFlow
@@ -166,6 +179,15 @@ export default function FlowRenderer({
           onFormChange={handleFormChange}
           onSubmitForm={handleSubmitForm}
           isSubmittingLead={isSubmittingLead}
+        />
+      );
+
+    case "community-life":
+      return (
+        <CommunityLifeFlow
+          communityLife={mergedConfig?.communityLife}
+          onSelectFlow={handleCommunityFlowSelect}
+          onBack={onBack}
         />
       );
 
