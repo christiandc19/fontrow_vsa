@@ -39,6 +39,12 @@ const formatDateLabel = (iso) => {
   });
 };
 
+const normalizeEmail = (email = "") => email.trim().toLowerCase();
+const normalizePhone = (phone = "") => phone.replace(/\D/g, "");
+
+const getFullNameFromLead = (lead) =>
+  `${lead?.firstName || ""} ${lead?.lastName || ""}`.trim();
+
 export default function ChatBox({ config = {} }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -78,24 +84,19 @@ export default function ChatBox({ config = {} }) {
     "--chat-primary-hover": theme.primaryHover || "#7c402c",
     "--chat-accent":
       theme.accent || theme.launcherAccent || theme.primary || "#16335b",
-
     "--chat-header-bg": theme.headerBg || "#fcf8ec",
     "--chat-header-text": theme.headerText || theme.textDark || "#333333",
     "--chat-header-subtitle":
       theme.headerSubtitle || theme.textMuted || theme.textDark || "#555555",
-
     "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
     "--chat-bot-bubble-text":
       theme.botBubbleText || theme.textDark || "#333333",
-
     "--chat-user-bubble-bg":
       theme.userBubbleBg || theme.primary || "#935135",
     "--chat-user-bubble-text": theme.userBubbleText || "#ffffff",
-
     "--chat-text-dark": theme.textDark || "#333333",
     "--chat-text-light": theme.textLight || "#ffffff",
     "--chat-text-muted": theme.textMuted || "#666666",
-
     "--chat-launcher-bg": theme.launcherBg || "#ffffff",
     "--chat-launcher-text":
       theme.launcherText || theme.textDark || "#333333",
@@ -103,25 +104,21 @@ export default function ChatBox({ config = {} }) {
       theme.launcherSubtitle || theme.textMuted || "#666666",
     "--chat-launcher-accent":
       theme.launcherAccent || theme.primary || "#16335b",
-
     "--chat-button-bg": theme.buttonBg || "#ffffff",
     "--chat-button-text": theme.buttonText || theme.textDark || "#333333",
     "--chat-button-border": theme.buttonBorder || "#dddddd",
     "--chat-button-active-bg":
       theme.buttonActiveBg || theme.primary || "#935135",
     "--chat-button-active-text": theme.buttonActiveText || "#ffffff",
-
     "--chat-back-button-bg": theme.backButtonBg || "#f3f4f6",
     "--chat-back-button-text":
       theme.backButtonText || theme.textDark || "#333333",
     "--chat-back-button-hover-bg":
       theme.backButtonHoverBg || theme.primaryHover || "#e5e7eb",
-
     "--chat-calendar-bg": theme.calendarBg || "#ffffff",
     "--chat-calendar-text": theme.calendarText || theme.textDark || "#333333",
     "--chat-calendar-muted-text":
       theme.calendarMutedText || theme.textMuted || "#999999",
-
     "--chat-input-bg": theme.inputBg || "#ffffff",
     "--chat-input-text": theme.inputText || theme.textDark || "#333333",
     "--chat-input-border": theme.inputBorder || "#dddddd",
@@ -141,6 +138,7 @@ export default function ChatBox({ config = {} }) {
 
   const quoteCfg = mergedConfig?.quote || {};
   const askCfg = mergedConfig?.ask || {};
+  const pricingCfg = mergedConfig?.pricing || {};
 
   const quoteProjectTypes = quoteCfg.projectTypes || [];
   const quoteClientTypes = quoteCfg.clientTypes || [];
@@ -159,19 +157,45 @@ export default function ChatBox({ config = {} }) {
     time: null,
   };
 
+  const initialPricing = {
+    livingOption: null,
+    inquiryFor: null,
+    timeline: null,
+  };
+
   const [isOpen, setIsOpen] = useState(false);
-  const [launcherMode, setLauncherMode] = useState("circle");
+  /* ========================================
+    LAUNCHER START STATE
+
+    If the visitor has already seen the auto-launch once,
+    start the launcher as a pill after page refresh.
+
+    If this is their first visit, start as a circle.
+  ======================================== */
+  const hasSeenLauncher =
+    localStorage.getItem("wsa-launcher-seen") === "true";
+
+  const [launcherMode, setLauncherMode] = useState(
+    hasSeenLauncher ? "pill" : "circle"
+  );
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
-  const [isCheckingIP, setIsCheckingIP] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [quoteSelections, setQuoteSelections] = useState(initialQuote);
   const [callSelections, setCallSelections] = useState(initialCall);
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
+  // Controls the typing animation before Ask flow appears
+  const [showAskStart, setShowAskStart] = useState(false);  
   const [pendingConversations, setPendingConversations] = useState([]);
+  const [showStartupTyping, setShowStartupTyping] = useState(false);
+  const [pricingSelections, setPricingSelections] = useState(initialPricing);
+
+  // Controls whether all main menu buttons are shown.
+  // If false, larger menus will only show the first few buttons.
+  const [showAllMenuButtons, setShowAllMenuButtons] = useState(false);
 
   const isSchedulingFlow =
     activeFlowId === "schedule" || activeFlowId === "demo";
@@ -190,33 +214,91 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
-
   useEffect(() => {
     if (!scrollRef.current) return;
 
-    scrollRef.current.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, activeFlowId, quoteSelections, callSelections, hasTypedQuestion]);
+    const timer = setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [
+      messages,
+      activeFlowId,
+      quoteSelections,
+      callSelections,
+      pricingSelections,
+      hasTypedQuestion,
+  ]);
+
+
+  /* ========================================
+    AUTO LAUNCH SEQUENCE
+
+    First homepage visit:
+    1. Start as circle
+    2. Expand to pill
+    3. Open full chatbot
+
+    After refresh:
+    - Stay as pill
+    - Do not auto-open again
+  ======================================== */
+  useEffect(() => {
+    const hasSeenLauncher =
+      localStorage.getItem("wsa-launcher-seen") === "true";
+
+    // If visitor already saw the auto-launch,
+    // keep the launcher as a pill and stop here.
+    if (hasSeenLauncher) {
+      setLauncherMode("pill");
+      return;
+    }
+
+    /* ========================================
+      Wait 3 seconds before starting
+      the launcher animation sequence.
+    ======================================== */
+
+    // After 3 seconds:
+    // circle -> pill
+    const pillTimer = setTimeout(() => {
+      setLauncherMode("pill");
+    }, 3000);
+
+    // After pill animation finishes:
+    // pill -> expanded chatbot
+    const openTimer = setTimeout(() => {
+      openChat();
+
+      // Remember visitor already saw the intro animation.
+      localStorage.setItem("wsa-launcher-seen", "true");
+    }, 4200);
+
+    // Cleanup timers if component unmounts.
+    return () => {
+      clearTimeout(pillTimer);
+      clearTimeout(openTimer);
+    };
+  }, []);
 
 
   const openLink = (url) => {
-  if (!url) return;
+    if (!url) return;
 
-  if (url.startsWith("/")) {
-    navigate(url);
-    setIsOpen(false);
-    return;
-  }
+    if (url.startsWith("/")) {
+      navigate(url);
+      setIsOpen(false);
+      return;
+    }
 
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-
   const checkUserByIP = async (updateFormData = true) => {
-    setIsCheckingIP(true);
-
     try {
       const userData = await getUserByIP();
       const user = Array.isArray(userData) ? userData[0] : userData;
@@ -227,7 +309,7 @@ export default function ChatBox({ config = {} }) {
 
       if (updateFormData) {
         setFormData({
-          name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          name: getFullNameFromLead(user),
           email: user.email || "",
           phone: user.phone || "",
         });
@@ -237,9 +319,30 @@ export default function ChatBox({ config = {} }) {
     } catch (error) {
       console.error("Error checking user by IP:", error);
       return null;
-    } finally {
-      setIsCheckingIP(false);
     }
+  };
+
+  const contactMatchesFoundUser = () => {
+    if (!foundUserData) return false;
+
+    const foundEmail = normalizeEmail(foundUserData.email);
+    const enteredEmail = normalizeEmail(formData.email);
+
+    if (foundEmail && enteredEmail) {
+      return foundEmail === enteredEmail;
+    }
+
+    const foundPhone = normalizePhone(foundUserData.phone);
+    const enteredPhone = normalizePhone(formData.phone);
+
+    if (foundPhone && enteredPhone) {
+      return foundPhone === enteredPhone;
+    }
+
+    const foundName = getFullNameFromLead(foundUserData).toLowerCase();
+    const enteredName = formData.name.trim().toLowerCase();
+
+    return !!foundName && !!enteredName && foundName === enteredName;
   };
 
   const saveConversationMessage = async (
@@ -287,6 +390,25 @@ export default function ChatBox({ config = {} }) {
 
   const openChat = async () => {
     setIsOpen(true);
+    setMessages([]);
+    // Start each new chat with the collapsed menu again.
+    // This keeps large client menus clean when the chatbot is reopened.
+    setShowAllMenuButtons(false);
+
+    setShowStartupTyping(true);
+
+    setActiveFlowId(null);
+    setQuoteSelections(initialQuote);
+    setCallSelections(initialCall);
+    setPricingSelections(initialPricing);
+    setAskQuestion("");
+    setHasTypedQuestion(false);
+    setFoundUserData(null);
+    setPendingConversations([]);
+
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+
+    setShowStartupTyping(false);
 
     setMessages([
       {
@@ -297,14 +419,6 @@ export default function ChatBox({ config = {} }) {
       },
     ]);
 
-    setActiveFlowId(null);
-    setQuoteSelections(initialQuote);
-    setCallSelections(initialCall);
-    setAskQuestion("");
-    setHasTypedQuestion(false);
-    setFoundUserData(null);
-    setPendingConversations([]);
-
     const userData = await checkUserByIP();
 
     if (!userData) {
@@ -314,9 +428,15 @@ export default function ChatBox({ config = {} }) {
     await saveConversationMessage(welcomeMessage, "bot", userData);
   };
 
+  /* ========================================
+    CLOSE FULL CHATBOT
+
+    When the expanded chatbot is closed,
+    return to the pill launcher instead of the circle.
+  ======================================== */
   const closeChat = () => {
     setIsOpen(false);
-    setLauncherMode("circle");
+    setLauncherMode("pill");
   };
 
   const expandLauncherToPill = () => {
@@ -331,14 +451,37 @@ export default function ChatBox({ config = {} }) {
   const syncKnownUserIntoForm = () => {
     if (foundUserData && formData.name === "") {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
+        name: getFullNameFromLead(foundUserData),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
     }
   };
 
+  const resetFlowSelections = (nextFlowId) => {
+    if (nextFlowId !== "quote") setQuoteSelections(initialQuote);
+
+    if (nextFlowId !== "schedule" && nextFlowId !== "demo") {
+      setCallSelections(initialCall);
+    }
+
+    if (nextFlowId !== "pricing") {
+      setPricingSelections(initialPricing);
+    }
+
+    if (nextFlowId !== "ask") {
+      setAskQuestion("");
+      setHasTypedQuestion(false);
+    }
+  };
+
   const handleMainMenuSelect = (item) => {
+
+    if (item.id === "show-more") {
+      setShowAllMenuButtons(true);
+      return;
+    }
+
     saveConversationMessage(item.label, "user");
 
     if (item.type === "link") {
@@ -346,29 +489,55 @@ export default function ChatBox({ config = {} }) {
       return;
     }
 
+    // Ask flow typing indicator before showing question
+    if (item.id === "ask") {
+      setActiveFlowId("ask");
+
+      // Hide Ask flow first
+      setShowAskStart(false);
+
+      resetFlowSelections("ask");
+      syncKnownUserIntoForm();
+
+      // Show typing indicator briefly
+      setTimeout(() => {
+        setShowAskStart(true);
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }, 100);
+
+      }, 1400);
+
+      return;
+    }
+
     setActiveFlowId(item.id);
-
-    if (item.id !== "quote") setQuoteSelections(initialQuote);
-
-    if (item.id !== "schedule" && item.id !== "demo") {
-      setCallSelections(initialCall);
-    }
-
-    if (item.id !== "ask") {
-      setAskQuestion("");
-      setHasTypedQuestion(false);
-    }
-
+    resetFlowSelections(item.id);
     syncKnownUserIntoForm();
   };
 
   const handleBackToMainMenu = () => {
     saveConversationMessage("Back to Main Menu", "user");
     setActiveFlowId(null);
-    setQuoteSelections(initialQuote);
-    setCallSelections(initialCall);
-    setAskQuestion("");
-    setHasTypedQuestion(false);
+    resetFlowSelections(null);
+    syncKnownUserIntoForm();
+  };
+
+  const handleCommunityFlowSelect = (flowId) => {
+    // Used by Floor Plans to return to the normal main menu.
+    if (flowId === "main-menu") {
+      handleBackToMainMenu();
+      return;
+    }
+
+    // Used by Community, Dining, and Floor Plans buttons.
+    saveConversationMessage(`Community action: ${flowId}`, "user");
+    setActiveFlowId(flowId);
+    resetFlowSelections(flowId);
     syncKnownUserIntoForm();
   };
 
@@ -403,14 +572,44 @@ export default function ChatBox({ config = {} }) {
     setQuoteSelections((prev) => ({ ...prev, timeline: option }));
   };
 
+  const handleSelectPricingLivingOption = (option) => {
+    saveConversationMessage(`Pricing - Living Option: ${option}`, "user");
+
+    setPricingSelections((prev) => ({
+      ...prev,
+      livingOption: option,
+      inquiryFor: null,
+      timeline: null,
+    }));
+  };
+
+  const handleSelectPricingInquiryFor = (option) => {
+    saveConversationMessage(`Pricing - For: ${option}`, "user");
+
+    setPricingSelections((prev) => ({
+      ...prev,
+      inquiryFor: option,
+      timeline: null,
+    }));
+  };
+
+  const handleSelectPricingTimeline = (option) => {
+    saveConversationMessage(`Pricing - Timeline: ${option}`, "user");
+
+    setPricingSelections((prev) => ({
+      ...prev,
+      timeline: option,
+    }));
+  };
+
   const handleSelectCallDate = (isoDate) => {
-    const label = activeFlowId === "demo" ? "Demo" : "Call";
+    const label = activeFlowId === "demo" ? "Demo" : "Visit";
     saveConversationMessage(`${label} - Date: ${isoDate}`, "user");
     setCallSelections((prev) => ({ ...prev, date: isoDate }));
   };
 
   const handleSelectCallTime = (time) => {
-    const label = activeFlowId === "demo" ? "Demo" : "Call";
+    const label = activeFlowId === "demo" ? "Demo" : "Visit";
     saveConversationMessage(`${label} - Time: ${time}`, "user");
     setCallSelections((prev) => ({ ...prev, time }));
   };
@@ -436,6 +635,7 @@ export default function ChatBox({ config = {} }) {
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
+    setPricingSelections(initialPricing);
     setAskQuestion("");
     setHasTypedQuestion(false);
 
@@ -443,11 +643,76 @@ export default function ChatBox({ config = {} }) {
       setFormData(initialForm);
     } else {
       setFormData({
-        name: `${foundUserData.firstName || ""} ${foundUserData.lastName || ""}`.trim(),
+        name: getFullNameFromLead(foundUserData),
         email: foundUserData.email || "",
         phone: foundUserData.phone || "",
       });
     }
+  };
+
+  const buildConversationMessage = () => {
+    if (activeFlowId === "quote") {
+      return `Quote Request: ${JSON.stringify(quoteSelections)}`;
+    }
+
+    if (activeFlowId === "pricing") {
+      return `Pricing Request
+
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+Living Option: ${pricingSelections.livingOption}
+For: ${pricingSelections.inquiryFor}
+Timeline: ${pricingSelections.timeline}`;
+    }
+
+    if (activeFlowId === "schedule") {
+      return `Schedule Visit Request
+
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+Date: ${formatDateLabel(callSelections.date)}
+Time: ${callSelections.time}`;
+    }
+
+    if (activeFlowId === "demo") {
+      return `Demo Request: ${callSelections.date} ${callSelections.time}`;
+    }
+
+    if (activeFlowId === "ask") {
+      return `Question Request
+
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+Question: ${askQuestion}`;
+    }
+
+    return `Lead from chatbot (${activeFlowId || "main_menu"})`;
+  };
+
+  const buildBotReply = () => {
+    if (activeFlowId === "ask") {
+      return `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+    }
+
+    if (activeFlowId === "pricing") {
+      return `Thanks, ${formData.name}! We received your pricing request and our team will follow up shortly.`;
+    }
+
+    if (isSchedulingFlow && callSelections.date && callSelections.time) {
+      const requestLabel = activeFlowId === "demo" ? "demo" : "visit";
+
+      return `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
+        callSelections.date
+      )} at ${callSelections.time}.`;
+    }
+
+    return `Thank you, ${formData.name}! A team member will reach out soon.`;
   };
 
   const handleSubmitForm = async (e) => {
@@ -456,23 +721,11 @@ export default function ChatBox({ config = {} }) {
     setIsSubmittingLead(true);
 
     try {
-      let conversationMessage = "";
-
-      if (activeFlowId === "quote") {
-        conversationMessage = `Quote Request: ${JSON.stringify(quoteSelections)}`;
-      } else if (activeFlowId === "schedule") {
-        conversationMessage = `Call Request: ${callSelections.date} ${callSelections.time}`;
-      } else if (activeFlowId === "demo") {
-        conversationMessage = `Demo Request: ${callSelections.date} ${callSelections.time}`;
-      } else if (activeFlowId === "ask") {
-        conversationMessage = `Question: ${askQuestion}`;
-      } else {
-        conversationMessage = `Lead from chatbot (${activeFlowId || "main_menu"})`;
-      }
-
+      const conversationMessage = buildConversationMessage();
       let newUserData = null;
+      const shouldAttachToFoundUser = foundUserData && contactMatchesFoundUser();
 
-      if (foundUserData) {
+      if (shouldAttachToFoundUser) {
         const leadId = foundUserData?.id;
 
         if (!leadId) {
@@ -515,10 +768,14 @@ export default function ChatBox({ config = {} }) {
           firstName,
           lastName,
           phone: formData.phone,
+          source: "chatbot",
+          formKey: activeFlowId || "chatbot",
           meta: {
             flow: activeFlowId,
             quoteSelections,
             callSelections,
+            pricingSelections,
+            askQuestion,
           },
           conversations: [
             ...pendingConversations,
@@ -544,19 +801,7 @@ export default function ChatBox({ config = {} }) {
         }
       }
 
-      let botReply = "";
-
-      if (activeFlowId === "ask") {
-        botReply = `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
-      } else if (isSchedulingFlow && callSelections.date && callSelections.time) {
-        const requestLabel = activeFlowId === "demo" ? "demo" : "call";
-
-        botReply = `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
-          callSelections.date
-        )} at ${callSelections.time}.`;
-      } else {
-        botReply = `Thank you, ${formData.name}! A team member will reach out soon.`;
-      }
+      const botReply = buildBotReply();
 
       setMessages((prev) => [
         ...prev,
@@ -588,6 +833,27 @@ export default function ChatBox({ config = {} }) {
   };
 
   const showMainMenuButtons = !activeFlowId;
+  // If a client has 7 or more menu buttons,
+  // only show the first 4 buttons at first.
+  // This keeps large menus from feeling crowded.
+  const shouldCollapseMenu = mainMenu.length >= 7;
+
+  // These are the buttons actually shown in the chatbot.
+  // Small menus show everything.
+  // Large menus show only the first 4 until "Show More" is clicked.
+  // Adds "Show More" as part of the same menu button group.
+  // This keeps all buttons inside MainMenuButtons and prevents layout bugs.
+  const visibleMainMenuButtons =
+    shouldCollapseMenu && !showAllMenuButtons
+      ? [
+          ...mainMenu.slice(0, 4),
+          {
+            id: "show-more",
+            label: "Show More",
+            type: "action",
+          },
+        ]
+      : mainMenu;
   const showQuoteSection = activeFlowId === "quote";
   const showScheduleSection = isSchedulingFlow;
   const showAskSection = activeFlowId === "ask";
@@ -617,6 +883,7 @@ export default function ChatBox({ config = {} }) {
     quoteCfg,
     scheduleCfg,
     askCfg,
+    pricingCfg,
     quoteProjectTypes,
     quoteClientTypes,
     quoteTimelines,
@@ -626,11 +893,13 @@ export default function ChatBox({ config = {} }) {
   const flowState = {
     quoteSelections,
     callSelections,
+    pricingSelections,
     hasTypedQuestion,
     askQuestion,
     setAskQuestion,
     formData,
     isSubmittingLead,
+    showAskStart,
   };
 
   const flowVisibility = {
@@ -645,6 +914,7 @@ export default function ChatBox({ config = {} }) {
   const flowHandlers = {
     handleServiceSelect,
     handleProjectSelect,
+    handleCommunityFlowSelect,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -653,6 +923,9 @@ export default function ChatBox({ config = {} }) {
     handleAskQuestionSubmit,
     handleFormChange,
     handleSubmitForm,
+    handleSelectPricingLivingOption,
+    handleSelectPricingInquiryFor,
+    handleSelectPricingTimeline,
   };
 
   return (
@@ -703,11 +976,19 @@ export default function ChatBox({ config = {} }) {
 
       {isOpen && (
         <div
-          className="chatbox-container"
-          role="dialog"
-          aria-label="Chat with us"
-          style={themeVars}
-        >
+          className={`chatbox-container
+            ${mainMenu.length >= 7 ? "chatbox-tall" : ""}
+            ${activeFlowId === "community" ||
+            activeFlowId === "dining" ||
+            activeFlowId === "floorplans"
+              ? "community-expanded"
+              : ""}
+          `}
+          style={{
+            ...themeVars,
+            "--chatbox-open-height": mainMenu.length >= 7 && showAllMenuButtons ? "760px" : "650px",
+          }}
+>
           <ChatHeader
             onClose={closeChat}
             title={headerTitle}
@@ -716,11 +997,16 @@ export default function ChatBox({ config = {} }) {
           />
 
           <div className="chatbox-main" ref={scrollRef}>
+
             <div className="chat-scroll-stack">
               <ChatMessages messages={messages} />
 
-              {isCheckingIP && (
-                <div className="chat-message bot">Checking your info…</div>
+              {showStartupTyping && (
+                <div className="chat-message bot typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
               )}
 
               {activeFlowId && (
@@ -738,25 +1024,18 @@ export default function ChatBox({ config = {} }) {
                 flowVisibility={flowVisibility}
                 flowHandlers={flowHandlers}
                 formatDateLabel={formatDateLabel}
+                onBack={handleBackToMainMenu}
               />
             </div>
           </div>
 
           <MainMenuButtons
-            items={mainMenu}
+            items={visibleMainMenuButtons}
             visible={showMainMenuButtons}
             onSelect={handleMainMenuSelect}
+            className={showAllMenuButtons ? "menu-expanded-animate" : ""}
           />
 
-          {activeFlowId && (
-            <button
-              className="back-menu-btn"
-              onClick={handleBackToMainMenu}
-              type="button"
-            >
-              Back to Main Menu
-            </button>
-          )}
         </div>
       )}
     </>

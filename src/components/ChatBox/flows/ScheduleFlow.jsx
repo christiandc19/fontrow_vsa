@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import StepCTAs from "../StepCTAs";
 import BubbleStep from "../BubbleStep";
 import ScheduleCalendar from "../ScheduleCalendar";
@@ -10,121 +10,155 @@ export default function ScheduleFlow({
   formatDateLabel,
   onSelectCallDate,
   onSelectCallTime,
-  showScheduleForm,
-  showScheduleSubmit,
   formData,
   onFormChange,
   onSubmitForm,
   isSubmittingLead,
 }) {
+  const hasSelectedDate = !!callSelections.date;
+  const hasSelectedDateAndTime = !!(callSelections.date && callSelections.time);
+
+  const [showScheduleStart, setShowScheduleStart] = useState(false);
+  const [showTimeQuestion, setShowTimeQuestion] = useState(false);
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      document.querySelector(".chatbox-main")?.scrollTo({
+        top: document.querySelector(".chatbox-main")?.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 50);
+  };
+
+  // Show typing indicator before the first schedule question appears
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowScheduleStart(true);
+      scrollToBottom();
+    }, 1400);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show typing indicator before the time question appears
+  useEffect(() => {
+    if (!callSelections.date) {
+      setShowTimeQuestion(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowTimeQuestion(true);
+      scrollToBottom();
+    }, 1400);
+
+    return () => clearTimeout(timer);
+  }, [callSelections.date]);
+
   return (
     <div className="schedule-section">
-      {scheduleCfg.intro && (
-        <div className="step-question">{scheduleCfg.intro}</div>
-      )}
-
-      <div className="step-block">
-        <div className="step-question">
-          {scheduleCfg.q1 || "What date would you like to schedule a call?"}
+      {!showScheduleStart ? (
+        <div className="chat-message bot typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
-
-        <ScheduleCalendar
-          selectedDate={callSelections.date}
-          onSelectDate={onSelectCallDate}
-        />
-
-        {callSelections.date && (
-          <div className="schedule-selected">
-            Selected date: <span>{formatDateLabel(callSelections.date)}</span>
-          </div>
-        )}
-      </div>
-
-      {callSelections.date && (
-        <div className="step-block">
-          <div className="step-question">
-            {scheduleCfg.q2 || "What time works best for you?"}
-          </div>
-
-          {!callSelections.time ? (
-            <StepCTAs
-              options={callTimeSlots}
-              onSelect={onSelectCallTime}
-            />
-          ) : (
-            <BubbleStep
-              options={callTimeSlots}
-              selected={callSelections.time}
-              onSelect={onSelectCallTime}
-            />
+      ) : (
+        <>
+          {scheduleCfg.intro && (
+            <div className="step-question">{scheduleCfg.intro}</div>
           )}
-        </div>
-      )}
 
-      {showScheduleForm && (
-        <div className="step-block">
-          <div className="step-question">
-            {scheduleCfg.contactPrompt ||
-              "Please share your contact details and we’ll confirm your call."}
+          <div className="step-block">
+            <div className="step-question">
+              {scheduleCfg.q1 || "What date would you like to schedule a visit?"}
+            </div>
+
+            <ScheduleCalendar
+              selectedDate={callSelections.date}
+              onSelectDate={onSelectCallDate}
+            />
+
+            {hasSelectedDate && (
+              <div className="schedule-selected">
+                Selected date: <span>{formatDateLabel(callSelections.date)}</span>
+              </div>
+            )}
           </div>
 
-          <form className="chat-form" onSubmit={onSubmitForm}>
-            <input
-              name="name"
-              value={formData.name}
-              onChange={onFormChange}
-              placeholder="First & Last Name"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={onFormChange}
-              placeholder="Email"
-              required
-            />
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={onFormChange}
-              placeholder="Phone"
-              required
-            />
-            <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-              {isSubmittingLead ? "Sending…" : "Submit"}
-            </button>
-          </form>
-        </div>
-      )}
+          {hasSelectedDate && !showTimeQuestion && (
+            <div className="chat-message bot typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          )}
 
-      {showScheduleSubmit && (
-        <div className="step-block">
-          <div className="step-question">
-            {scheduleCfg.returningPrompt ||
-              `Welcome back! We'll confirm your call on ${formatDateLabel(
-                callSelections.date
-              )} at ${callSelections.time}.`}
-          </div>
+          {hasSelectedDate && showTimeQuestion && (
+            <div className="step-block">
+              <div className="step-question">
+                {scheduleCfg.q2 || "What time works best for you?"}
+              </div>
 
-          <div className="existing-user-info">
-            <p><strong>Name:</strong> {formData.name}</p>
-            <p><strong>Email:</strong> {formData.email}</p>
-            <p><strong>Phone:</strong> {formData.phone}</p>
+              {!callSelections.time ? (
+                <StepCTAs options={callTimeSlots} onSelect={onSelectCallTime} />
+              ) : (
+                <BubbleStep
+                  options={callTimeSlots}
+                  selected={callSelections.time}
+                  onSelect={onSelectCallTime}
+                />
+              )}
+            </div>
+          )}
 
-            <button
-              className="cta-btn"
-              onClick={onSubmitForm}
-              disabled={isSubmittingLead}
-              type="button"
-            >
-              {isSubmittingLead
-                ? "Sending…"
-                : scheduleCfg.returningButton || "Confirm Call"}
-            </button>
-          </div>
-        </div>
+          {hasSelectedDateAndTime && (
+            <div className="step-block">
+              <div className="step-question">
+                {scheduleCfg.contactPrompt ||
+                  "Please confirm or update your contact details and we’ll confirm your visit."}
+              </div>
+
+              <form className="chat-form" onSubmit={onSubmitForm}>
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={onFormChange}
+                  placeholder="First & Last Name"
+                  required
+                />
+
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={onFormChange}
+                  placeholder="Email"
+                  required
+                />
+
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={onFormChange}
+                  placeholder="Phone"
+                  required
+                />
+
+                <button
+                  className="cta-btn"
+                  type="submit"
+                  disabled={isSubmittingLead}
+                >
+                  {isSubmittingLead
+                    ? "Sending…"
+                    : scheduleCfg.returningButton || "Schedule Visit"}
+                </button>
+              </form>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

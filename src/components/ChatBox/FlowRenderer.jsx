@@ -5,6 +5,9 @@ import QuoteFlow from "./flows/QuoteFlow";
 import ScheduleFlow from "./flows/ScheduleFlow";
 import AskFlow from "./flows/AskFlow";
 import OptionsFlow from "./flows/OptionsFlow";
+import CommunityFlow from "./flows/CommunityFlow";
+import PricingFlow from "./flows/PricingFlow";
+import CommunityLifeFlow from "./flows/CommunityLifeFlow";
 
 export default function FlowRenderer({
   activeFlowId,
@@ -13,6 +16,7 @@ export default function FlowRenderer({
   flowVisibility,
   flowHandlers,
   formatDateLabel,
+  onBack,
 }) {
   const {
     mergedConfig,
@@ -21,6 +25,7 @@ export default function FlowRenderer({
     quoteCfg,
     scheduleCfg,
     askCfg,
+    pricingCfg,
     quoteProjectTypes,
     quoteClientTypes,
     quoteTimelines,
@@ -30,11 +35,15 @@ export default function FlowRenderer({
   const {
     quoteSelections,
     callSelections,
+    pricingSelections,
     hasTypedQuestion,
     askQuestion,
     setAskQuestion,
     formData,
     isSubmittingLead,
+
+    // Ask flow typing animation
+    showAskStart,
   } = flowState;
 
   const {
@@ -49,6 +58,10 @@ export default function FlowRenderer({
   const {
     handleServiceSelect,
     handleProjectSelect,
+    handleCommunityFlowSelect,
+    handleSelectPricingLivingOption,
+    handleSelectPricingInquiryFor,
+    handleSelectPricingTimeline,
     handleSelectProjectType,
     handleSelectClientType,
     handleSelectTimeline,
@@ -77,7 +90,6 @@ export default function FlowRenderer({
           onSelect={handleProjectSelect}
         />
       );
-
 
     case "quote":
       return (
@@ -122,6 +134,7 @@ export default function FlowRenderer({
       return (
         <AskFlow
           askCfg={askCfg}
+          showAskStart={showAskStart}
           hasTypedQuestion={hasTypedQuestion}
           askQuestion={askQuestion}
           setAskQuestion={setAskQuestion}
@@ -136,7 +149,58 @@ export default function FlowRenderer({
       );
 
     case "options":
-      return <OptionsFlow config={mergedConfig} />;
+      return <OptionsFlow config={mergedConfig} onBack={onBack} />;
+
+    case "community":
+      return (
+        <CommunityFlow
+          community={mergedConfig?.community}
+          onSelectFlow={handleCommunityFlowSelect}
+        />
+      );
+
+    case "dining":
+      return (
+        <CommunityFlow
+          community={mergedConfig?.dining}
+          onSelectFlow={handleCommunityFlowSelect}
+        />
+      );
+
+    case "floorplans":
+      return (
+        <CommunityFlow
+          community={mergedConfig?.floorplans}
+
+          // Reuse the same flow handler used by Community/Dining.
+          // This lets the floor plan button trigger Back to Main Menu.
+          onSelectFlow={handleCommunityFlowSelect}
+        />
+      );      
+
+    case "pricing":
+      return (
+        <PricingFlow
+          pricingCfg={pricingCfg}
+          pricingSelections={pricingSelections}
+          onSelectLivingOption={handleSelectPricingLivingOption}
+          onSelectInquiryFor={handleSelectPricingInquiryFor}
+          onSelectTimeline={handleSelectPricingTimeline}
+          formData={formData}
+          onFormChange={handleFormChange}
+          onSubmitForm={handleSubmitForm}
+          isSubmittingLead={isSubmittingLead}
+        />
+      );
+
+    case "community-life":
+      return (
+        <CommunityLifeFlow
+          communityLife={mergedConfig?.communityLife}
+          onSelectFlow={handleCommunityFlowSelect}
+          onBack={onBack}
+        />
+      );
 
     default:
       return null;

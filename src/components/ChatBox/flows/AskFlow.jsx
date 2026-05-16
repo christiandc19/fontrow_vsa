@@ -2,11 +2,10 @@ import React from "react";
 
 export default function AskFlow({
   askCfg,
+  showAskStart,
   hasTypedQuestion,
   askQuestion,
   setAskQuestion,
-  showAskForm,
-  showAskSubmit,
   formData,
   onFormChange,
   onAskQuestionSubmit,
@@ -14,8 +13,15 @@ export default function AskFlow({
   isSubmittingLead,
 }) {
   return (
-    <div className="flow-section">
-      {!hasTypedQuestion ? (
+    <div className="flow-section ask-flow-section">
+      <div className="ask-flow-inner">
+      {!showAskStart ? (
+        <div className="chat-message bot typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      ) : !hasTypedQuestion ? (
         <>
           <div className="step-question">
             {askCfg.q1 || "What question do you have?"}
@@ -30,16 +36,17 @@ export default function AskFlow({
               required
               rows="3"
             />
+
             <button className="cta-btn" type="submit">
               Continue
             </button>
           </form>
         </>
-      ) : showAskForm ? (
+      ) : (
         <>
           <div className="step-question">
             {askCfg.contactPrompt ||
-              "Please share your contact details so we can follow up."}
+              "Please confirm or update your contact information so our team can follow up."}
           </div>
 
           <form className="chat-form" onSubmit={onSubmitForm}>
@@ -50,6 +57,7 @@ export default function AskFlow({
               placeholder="First & Last Name"
               required
             />
+
             <input
               type="email"
               name="email"
@@ -58,6 +66,7 @@ export default function AskFlow({
               placeholder="Email"
               required
             />
+
             <input
               type="tel"
               name="phone"
@@ -66,36 +75,14 @@ export default function AskFlow({
               placeholder="Phone"
               required
             />
+
             <button className="cta-btn" type="submit" disabled={isSubmittingLead}>
-              {isSubmittingLead ? "Sending…" : "Submit"}
+              {isSubmittingLead ? "Sending…" : askCfg.returningButton || "Send Message"}
             </button>
           </form>
         </>
-      ) : showAskSubmit ? (
-        <>
-          <div className="step-question">
-            {askCfg.returningPrompt ||
-              "Thanks! We’ll follow up with you about your question."}
-          </div>
-
-          <div className="existing-user-info">
-            <p><strong>Name:</strong> {formData.name}</p>
-            <p><strong>Email:</strong> {formData.email}</p>
-            <p><strong>Phone:</strong> {formData.phone}</p>
-
-            <button
-              className="cta-btn"
-              onClick={onSubmitForm}
-              disabled={isSubmittingLead}
-              type="button"
-            >
-              {isSubmittingLead
-                ? "Sending…"
-                : askCfg.returningButton || "Submit Question"}
-            </button>
-          </div>
-        </>
-      ) : null}
+      )}
     </div>
+  </div>
   );
 }

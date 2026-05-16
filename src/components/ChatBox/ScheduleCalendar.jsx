@@ -41,10 +41,17 @@ export default function ScheduleCalendar({ selectedDate, onSelectDate }) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   const isDisabled = (year, month, day) => {
-    const test = new Date(year, month, day);
-    test.setHours(0, 0, 0, 0);
-    return test < today;
-  };
+  const test = new Date(year, month, day);
+  test.setHours(0, 0, 0, 0);
+
+  // Disable past dates
+  const isPastDate = test < today;
+
+  // Disable weekends: Sunday = 0, Saturday = 6
+  const isWeekend = test.getDay() === 0 || test.getDay() === 6;
+
+  return isPastDate || isWeekend;
+};
 
   const isSelected = (year, month, day) => {
     if (!selectedDate) return false;
