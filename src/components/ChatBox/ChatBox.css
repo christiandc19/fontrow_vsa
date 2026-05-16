@@ -84,7 +84,6 @@
   animation: chatGrowFromPill 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Larger menu state. Height value should match --chatbox-open-height in ChatBox.jsx. */
 .chatbox-container.chatbox-tall {
   height: 760px;
 }
@@ -99,6 +98,7 @@
   }
 }
 
+/* Main bottom CTA area animation */
 .chatbox-ctas,
 .back-menu-btn {
   animation: chatContentScrollUp 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -199,7 +199,6 @@
   transform: scale(1.05);
 }
 
-/* Larger close button in fullscreen gallery mode */
 .chatbox-container.community-expanded .chat-close-btn {
   width: 48px;
   height: 48px;
@@ -212,13 +211,13 @@
 ======================================== */
 .chatbox-main {
   flex: 1;
-
   overflow-y: auto;
   overflow-x: hidden;
 
-  padding: 16px;
+  /* Single padding declaration to avoid bottom-padding conflicts */
+  padding: 16px 16px 8px;
 
-  background: white;
+  background: #ffffff;
 }
 
 .chat-scroll-stack {
@@ -226,23 +225,13 @@
   flex-direction: column;
   gap: 14px;
   width: 100%;
-
-  /* Lets flows sit lower in the chatbot */
   min-height: 100%;
 }
 
+.chat-messages,
 .flow-section,
 .schedule-section,
-.pricing-section {
-  display: flex;
-  flex-direction: column;
-
-  /* Pushes submenu content lower */
-  justify-content: flex-end;
-
-  min-height: 100%;
-}
-
+.pricing-section,
 .step-block,
 .step-cta-list {
   display: flex;
@@ -257,6 +246,8 @@
 .schedule-section,
 .pricing-section {
   gap: 14px;
+  justify-content: flex-end;
+  min-height: 100%;
 }
 
 .step-block {
@@ -264,11 +255,14 @@
 }
 
 .step-cta-list {
-  gap: 9px;
+  gap: 6px;
 }
 
+/* ========================================
+   CHAT MESSAGES
+======================================== */
 .chat-message {
-  width: 75%;
+  width: fit-content;
 
   padding: 12px 15px;
 
@@ -298,6 +292,10 @@
 /* ========================================
    TYPING INDICATOR
 ======================================== */
+.options-typing-container {
+  width: 100%;
+}
+
 .typing-indicator {
   display: flex;
   align-items: center;
@@ -388,7 +386,6 @@
 .step-question {
   display: inline-block;
   width: fit-content;
-  max-width: 75%;
   min-width: 0;
 
   margin: 1rem 0;
@@ -439,7 +436,6 @@
   padding: 14px 16px 16px;
 
   background: #ffffff;
-
 }
 
 /* ========================================
@@ -627,6 +623,80 @@
 }
 
 /* ========================================
+   OPTIONS / SUBMENU FLOWS
+======================================== */
+.options-flow-container {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  /*
+    Anchors finished submenu content lower without affecting the typing state.
+    The typing state uses .options-typing-container.
+  */
+  margin-top: auto;
+  padding-bottom: 0;
+
+  overflow: visible;
+}
+
+.options-message {
+  width: 100%;
+  text-align: center;
+}
+
+.options-flow-container .chatbox-ctas.options-buttons {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+  border-top: none;
+
+  animation: none;
+}
+
+.options-flow-container .cta-btn {
+  min-height: 44px;
+  padding: 11px 14px;
+}
+
+.options-flow-container .chatbox-ctas.options-buttons .cta-btn:last-child {
+  margin-bottom: 0;
+}
+
+.options-slide-up {
+  animation: optionsSlideUp 0.45s ease-out both;
+}
+
+@keyframes optionsSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   ASK FLOW LAYOUT
+======================================== */
+.ask-flow-section {
+  margin-top: auto;
+  padding-bottom: 12px;
+}
+
+/* ========================================
    LAUNCHER
 ======================================== */
 .chat-launcher {
@@ -660,10 +730,10 @@
 
   padding: 0;
 
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.233);
   border-radius: 999px;
   animation: none;
-  background-color: rgb(255, 255, 255);
-  border: 1px solid rgba(0, 0, 0, 0.233);
 }
 
 .chat-launcher.pill {
@@ -674,9 +744,9 @@
 
   justify-content: space-between;
 
-  padding: 0 8px 0 8px;
+  padding: 0 8px;
 
-  background: white;
+  background: #ffffff;
   border: 1px solid rgba(199, 199, 199, 0.247);
   border-radius: 999px;
 }
@@ -724,7 +794,7 @@
   overflow: hidden;
 
   border-radius: 999px;
-  background: white;
+  background: #ffffff;
   box-shadow: 0 10px 24px rgba(56, 189, 248, 0.28);
 }
 
@@ -769,35 +839,43 @@
 
 .chat-launcher-title {
   overflow: hidden;
-  color: #252525;
+
   padding: 1px;
+
+  color: #252525;
+
   font-size: 16px;
   font-weight: 600;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .chat-launcher-subtitle {
-  color: #252525;
-  font-size: 14px;
   padding: 1px;
+
+  color: #252525;
+
+  font-size: 14px;
 }
 
 .chat-launcher-close {
   width: 40px;
   height: 40px;
   margin-right: 2px;
+
   flex-shrink: 0;
+
   border: none;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   color: #252525;
+
   font-size: 30px;
   line-height: 1;
+
   cursor: pointer;
 }
-
-
 
 .chat-launcher.circle .chat-launcher-text,
 .chat-launcher.circle .chat-launcher-close,
@@ -812,56 +890,6 @@
 
   font-size: 18px;
   line-height: 1;
-}
-
-/* ========================================
-   OPTIONS FLOW
-======================================== */
-.options-flow-container {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-
-  overflow: visible;
-}
-
-.options-message {
-  width: 100%;
-  text-align: center;
-}
-
-.options-flow-container .chatbox-ctas.options-buttons {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  padding: 0;
-  margin: 0;
-
-  background: transparent;
-  border-top: none;
-
-  animation: none;
-}
-
-.options-slide-up {
-  animation: optionsSlideUp 0.45s ease-out both;
-}
-
-@keyframes optionsSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* ========================================
@@ -1011,11 +1039,19 @@
 }
 
 .chatbox-container.community-expanded .community-gallery {
-  height: 100%;
+  /* Leaves room for tabs and thumbnails */
+  height: calc(100vh - 210px);
+  max-height: 620px;
 
   overflow: hidden;
 
   border-radius: 22px;
+}
+
+.chatbox-container.community-expanded .community-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .chatbox-container.community-expanded .community-actions {
@@ -1023,7 +1059,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
 }
 
 .chatbox-container.community-expanded .community-action-btn {
@@ -1033,33 +1069,172 @@
   font-weight: 700;
 }
 
-.options-flow-container {
-  margin-top: auto;
+/* ========================================
+   COMMUNITY GALLERY LABEL
+   Styled similar to the active tabs
+======================================== */
+
+.community-gallery-label {
+  display: inline-flex;
+
+  margin-right: auto;
+  margin-bottom: 14px;
+
+  padding-bottom: 8px;
+
+  border-bottom: 2px solid var(--chat-accent);
+
+  color: var(--chat-accent);
+
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ========================================
+   COMMUNITY / FLOOR PLAN TABS
+======================================== */
+
+.community-gallery-wrap {
+  width: 100%;
+  text-align: left;
+}
+
+.community-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+
+.community-tab {
+  padding: 0 0 10px;
+
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--chat-accent);
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.community-tab.active {
+  border-bottom-color: var(--chat-accent);
+}
+
+.community-thumbnails {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.community-thumbnail {
+  width: 72px;
+  height: 46px;
+
+  padding: 0;
+  overflow: hidden;
+
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #eef2f5;
+
+  cursor: pointer;
+}
+
+.community-thumbnail.active {
+  border-color: var(--chat-accent);
+}
+
+.community-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 
 /* ========================================
-   ASK FLOW LAYOUT
+   PRICING FLOW ONLY
 ======================================== */
 
-/* Give Ask flow room to push content down */
-.chat-scroll-stack {
-  min-height: 100%;
+/* Keep pricing content compact */
+.pricing-flow.flow-section {
+  min-height: unset !important;
+  gap: 12px;
 }
 
-/* Push only the Ask flow content lower */
-.ask-flow-section {
-  margin-top: auto;
-  padding-bottom: 12px;
+/* Shrink only after Pricing buttons/content are visible */
+.chatbox-container:has(.pricing-flow .step-cta-list),
+.chatbox-container:has(.pricing-flow .pricing-form) {
+  height: auto !important;
+  max-height: calc(100vh - 32px);
 }
 
-.ask-flow-section {
-  height: 100%;
+/* Keep normal height while PricingFlow is still typing/loading */
+.chatbox-container:has(.pricing-flow .typing-indicator) {
+  height: 650px !important;
 }
 
-.ask-flow-inner {
-  margin-top: auto;
+/* Let the body fit the pricing content */
+.chatbox-container:has(.pricing-flow) .chatbox-main {
+  flex: 0 1 auto;
 }
+
+/* Remove extra internal spacing */
+.pricing-flow .step-block {
+  gap: 8px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pricing-flow .step-question {
+  margin: 0 0 4px 0 !important;
+}
+
+.pricing-flow .step-cta-list {
+  gap: 6px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pricing-flow .step-cta-btn {
+  margin: 0 !important;
+}
+
+.pricing-flow .chat-form {
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 8px;
+}
+
+
+/* Pricing content slides up after typing indicator */
+.pricing-flow .step-block {
+  animation: pricingSlideUp 0.45s ease-out both;
+}
+
+.pricing-flow .step-cta-list,
+.pricing-flow .pricing-form,
+.pricing-flow .chat-form {
+  animation: pricingSlideUp 0.45s ease-out both;
+}
+
+@keyframes pricingSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 /* ========================================
    RESPONSIVE
@@ -1079,29 +1254,19 @@
     bottom: 12px;
   }
 
-.chat-launcher.pill {
-  width: 340px;
-  max-width: calc(100vw - 32px);
-
-  /* Taller launcher */
-  height: 82px;
-  min-height: 82px;
-
-  border-radius: 999px;
-
-  padding: 0 12px 0 8px;
-
-  justify-content: space-between;
-
-  /* Universal white background */
-  background: #ffffff;
-
-  border: 1px solid rgba(0, 0, 0, 0.08);
-
-  box-shadow:
-    0 14px 40px rgba(0, 0, 0, 0.16),
-    0 2px 10px rgba(0, 0, 0, 0.06);
-}
+  .chat-launcher.pill {
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    height: 82px;
+    min-height: 82px;
+    padding: 0 12px 0 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow:
+      0 14px 40px rgba(0, 0, 0, 0.16),
+      0 2px 10px rgba(0, 0, 0, 0.06);
+  }
 
   .chat-launcher.circle {
     width: 64px;

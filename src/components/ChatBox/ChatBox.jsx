@@ -164,7 +164,20 @@ export default function ChatBox({ config = {} }) {
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const [launcherMode, setLauncherMode] = useState("circle");
+  /* ========================================
+    LAUNCHER START STATE
+
+    If the visitor has already seen the auto-launch once,
+    start the launcher as a pill after page refresh.
+
+    If this is their first visit, start as a circle.
+  ======================================== */
+  const hasSeenLauncher =
+    localStorage.getItem("wsa-launcher-seen") === "true";
+
+  const [launcherMode, setLauncherMode] = useState(
+    hasSeenLauncher ? "pill" : "circle"
+  );
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
@@ -220,6 +233,58 @@ export default function ChatBox({ config = {} }) {
       pricingSelections,
       hasTypedQuestion,
   ]);
+
+
+  /* ========================================
+    AUTO LAUNCH SEQUENCE
+
+    First homepage visit:
+    1. Start as circle
+    2. Expand to pill
+    3. Open full chatbot
+
+    After refresh:
+    - Stay as pill
+    - Do not auto-open again
+  ======================================== */
+  useEffect(() => {
+    const hasSeenLauncher =
+      localStorage.getItem("wsa-launcher-seen") === "true";
+
+    // If visitor already saw the auto-launch,
+    // keep the launcher as a pill and stop here.
+    if (hasSeenLauncher) {
+      setLauncherMode("pill");
+      return;
+    }
+
+    /* ========================================
+      Wait 3 seconds before starting
+      the launcher animation sequence.
+    ======================================== */
+
+    // After 3 seconds:
+    // circle -> pill
+    const pillTimer = setTimeout(() => {
+      setLauncherMode("pill");
+    }, 3000);
+
+    // After pill animation finishes:
+    // pill -> expanded chatbot
+    const openTimer = setTimeout(() => {
+      openChat();
+
+      // Remember visitor already saw the intro animation.
+      localStorage.setItem("wsa-launcher-seen", "true");
+    }, 4200);
+
+    // Cleanup timers if component unmounts.
+    return () => {
+      clearTimeout(pillTimer);
+      clearTimeout(openTimer);
+    };
+  }, []);
+
 
   const openLink = (url) => {
     if (!url) return;
@@ -363,9 +428,15 @@ export default function ChatBox({ config = {} }) {
     await saveConversationMessage(welcomeMessage, "bot", userData);
   };
 
+  /* ========================================
+    CLOSE FULL CHATBOT
+
+    When the expanded chatbot is closed,
+    return to the pill launcher instead of the circle.
+  ======================================== */
   const closeChat = () => {
     setIsOpen(false);
-    setLauncherMode("circle");
+    setLauncherMode("pill");
   };
 
   const expandLauncherToPill = () => {
@@ -457,6 +528,13 @@ export default function ChatBox({ config = {} }) {
   };
 
   const handleCommunityFlowSelect = (flowId) => {
+    // Used by Floor Plans to return to the normal main menu.
+    if (flowId === "main-menu") {
+      handleBackToMainMenu();
+      return;
+    }
+
+    // Used by Community, Dining, and Floor Plans buttons.
     saveConversationMessage(`Community action: ${flowId}`, "user");
     setActiveFlowId(flowId);
     resetFlowSelections(flowId);
@@ -900,7 +978,9 @@ Question: ${askQuestion}`;
         <div
           className={`chatbox-container
             ${mainMenu.length >= 7 ? "chatbox-tall" : ""}
-            ${activeFlowId === "community" || activeFlowId === "dining"
+            ${activeFlowId === "community" ||
+            activeFlowId === "dining" ||
+            activeFlowId === "floorplans"
               ? "community-expanded"
               : ""}
           `}

@@ -1,16 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-const scrollChatToBottom = () => {
-  setTimeout(() => {
-    const chatMain = document.querySelector(".chatbox-main");
-
-    chatMain?.scrollTo({
-      top: chatMain.scrollHeight,
-      behavior: "smooth",
-    });
-  }, 50);
-};
-
 export default function PricingFlow({
   pricingCfg,
   pricingSelections,
@@ -31,15 +20,29 @@ export default function PricingFlow({
   const [showQuestion3, setShowQuestion3] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      const chatMain = document.querySelector(".chatbox-main");
+      if (!chatMain) return;
+
+      chatMain.scrollTo({
+        top: chatMain.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 120);
+  };
+
+  // Reveal first pricing question
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowQuestion1(true);
-      scrollChatToBottom();
+      scrollToBottom();
     }, 1400);
 
     return () => clearTimeout(timer);
   }, []);
 
+  // Reveal "Who is this for?"
   useEffect(() => {
     if (!pricingSelections.livingOption) {
       setShowQuestion2(false);
@@ -48,12 +51,13 @@ export default function PricingFlow({
 
     const timer = setTimeout(() => {
       setShowQuestion2(true);
-      scrollChatToBottom();
+      scrollToBottom();
     }, 1400);
 
     return () => clearTimeout(timer);
   }, [pricingSelections.livingOption]);
 
+  // Reveal timeline question
   useEffect(() => {
     if (!pricingSelections.inquiryFor) {
       setShowQuestion3(false);
@@ -62,12 +66,13 @@ export default function PricingFlow({
 
     const timer = setTimeout(() => {
       setShowQuestion3(true);
-      scrollChatToBottom();
+      scrollToBottom();
     }, 1400);
 
     return () => clearTimeout(timer);
   }, [pricingSelections.inquiryFor]);
 
+  // Reveal contact form
   useEffect(() => {
     if (!pricingSelections.timeline) {
       setShowContactForm(false);
@@ -76,7 +81,7 @@ export default function PricingFlow({
 
     const timer = setTimeout(() => {
       setShowContactForm(true);
-      scrollChatToBottom();
+      scrollToBottom();
     }, 1400);
 
     return () => clearTimeout(timer);
@@ -103,7 +108,9 @@ export default function PricingFlow({
               <button
                 type="button"
                 className="selected-answer-pill"
-                onClick={() => onSelectLivingOption(pricingSelections.livingOption)}
+                onClick={() =>
+                  onSelectLivingOption(pricingSelections.livingOption)
+                }
               >
                 {pricingSelections.livingOption}
               </button>
@@ -144,7 +151,9 @@ export default function PricingFlow({
               <button
                 type="button"
                 className="selected-answer-pill"
-                onClick={() => onSelectInquiryFor(pricingSelections.inquiryFor)}
+                onClick={() =>
+                  onSelectInquiryFor(pricingSelections.inquiryFor)
+                }
               >
                 {pricingSelections.inquiryFor}
               </button>

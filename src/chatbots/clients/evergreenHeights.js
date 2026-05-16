@@ -116,20 +116,19 @@ const evergreenHeightsConfig = {
     {
       id: "floorplans",
       label: "View Floor Plans",
-      type: "link",
-      url: "#",
+      type: "flow",
     },
     {
       id: "jobs",
       label: "Job Inquiry",
       type: "link",
-      url: "https://your-job-page-url.com",
+      url: "/careers/",
     },    
     {
       id: "contact",
       label: "Contact Us",
       type: "link",
-      url: "#",
+      url: "/contact/",
     },
     {
       id: "ask",
@@ -143,6 +142,7 @@ const evergreenHeightsConfig = {
   quote: {},
 
   community: {
+    title: "View Community",
     images: [
       {
         id: "community-1",
@@ -175,6 +175,87 @@ const evergreenHeightsConfig = {
         type: "flow",
         flowId: "ask",
       },
+      {
+      id: "back-to-main",
+      label: "Back to Main Menu",
+
+      // Returns user to the normal chatbot menu.
+      type: "back",
+    },
+    ],
+  },
+
+
+floorplans: {
+  title: "View Floor Plans",
+  // Default tab shown when this flow opens.
+  defaultTab: "floorplans",
+
+  // Photos tab images.
+  // Replace these later with real Evergreen Heights community photos.
+  photos: [
+    {
+      id: "photo-1",
+      src: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      alt: "Evergreen Heights community photo placeholder",
+    },
+    {
+      id: "photo-2",
+      src: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1200&auto=format&fit=crop",
+      alt: "Evergreen Heights apartment photo placeholder",
+    },
+    {
+      id: "photo-3",
+      src: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop",
+      alt: "Evergreen Heights interior photo placeholder",
+    },
+  ],
+
+    // Floor Plans tab images.
+    // Replace these later with real floor plan images.
+    floorplans: [
+      {
+        id: "floorplan-1",
+        src: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop",
+        alt: "One bedroom floor plan placeholder",
+      },
+      {
+        id: "floorplan-2",
+        src: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop",
+        alt: "Two bedroom floor plan placeholder",
+      },
+      {
+        id: "floorplan-3",
+        src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
+        alt: "Studio floor plan placeholder",
+      },
+    ],
+
+    // Buttons shown in the right-side panel.
+    buttons: [
+      {
+        id: "pricing",
+        label: "Pricing",
+        type: "flow",
+        flowId: "pricing",
+      },
+      {
+        id: "schedule",
+        label: "Schedule A Visit",
+        type: "flow",
+        flowId: "schedule",
+      },
+      {
+        id: "ask",
+        label: "Ask A Question",
+        type: "flow",
+        flowId: "ask",
+      },
+      {
+        id: "back-to-main",
+        label: "Back to Main Menu",
+        type: "back",
+      },
     ],
   },
 
@@ -187,13 +268,13 @@ const evergreenHeightsConfig = {
       id: "about",
       label: "About",
       type: "link",
-      url: "#",
+      url: "/about-us/",
     },
     {
       id: "amenities",
       label: "Amenities",
       type: "link",
-      url: "#",
+      url: "/amenities-services/",
     },
     {
       id: "dining",
@@ -205,18 +286,19 @@ const evergreenHeightsConfig = {
       id: "events",
       label: "Events",
       type: "link",
-      url: "#",
+      url: "/events/",
     },
     {
       id: "gallery",
       label: "Gallery",
       type: "link",
-      url: "#",
+      url: "/gallery/",
     },
   ],
 },
 
 dining: {
+  title: "View Dining",
   images: [
     {
       id: "dining-1",
@@ -249,8 +331,15 @@ dining: {
       type: "flow",
       flowId: "ask",
     },
-  ],
-},
+    {
+    id: "back-to-main",
+    label: "Back to Main Menu",
+
+    // Returns user to the main chatbot menu.
+    type: "back",
+    },
+    ],
+  },
 
 
   pricing: {
