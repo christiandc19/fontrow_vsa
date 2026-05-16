@@ -167,6 +167,17 @@ export default function FlowRenderer({
         />
       );
 
+    case "floorplans":
+      return (
+        <CommunityFlow
+          community={mergedConfig?.floorplans}
+
+          // Reuse the same flow handler used by Community/Dining.
+          // This lets the floor plan button trigger Back to Main Menu.
+          onSelectFlow={handleCommunityFlowSelect}
+        />
+      );      
+
     case "pricing":
       return (
         <PricingFlow
