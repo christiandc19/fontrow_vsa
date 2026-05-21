@@ -48,6 +48,7 @@ const getFullNameFromLead = (lead) =>
 export default function ChatBox({ config = {} }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const askTypingTimerRef = useRef(null);
 
   const clientKey = config?.clientKey || "default";
   const brandConfig = getBotConfig(clientKey);
@@ -188,7 +189,9 @@ export default function ChatBox({ config = {} }) {
   const [askQuestion, setAskQuestion] = useState("");
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
   // Controls the typing animation before Ask flow appears
-  const [showAskStart, setShowAskStart] = useState(false);  
+  const [showAskStart, setShowAskStart] = useState(false);
+  const [pendingFlowId, setPendingFlowId] = useState(null);
+  const [showFlowTyping, setShowFlowTyping] = useState(false);
   const [pendingConversations, setPendingConversations] = useState([]);
   const [showStartupTyping, setShowStartupTyping] = useState(false);
   const [pricingSelections, setPricingSelections] = useState(initialPricing);
@@ -226,13 +229,22 @@ export default function ChatBox({ config = {} }) {
 
     return () => clearTimeout(timer);
   }, [
-      messages,
-      activeFlowId,
-      quoteSelections,
-      callSelections,
-      pricingSelections,
-      hasTypedQuestion,
+    messages,
+    activeFlowId,
+    quoteSelections,
+    callSelections,
+    pricingSelections,
+    hasTypedQuestion,
+    showFlowTyping,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (askTypingTimerRef.current) {
+        clearTimeout(askTypingTimerRef.current);
+      }
+    };
+  }, []);
 
 
   /* ========================================
@@ -396,6 +408,14 @@ export default function ChatBox({ config = {} }) {
     setShowAllMenuButtons(false);
 
     setShowStartupTyping(true);
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
+    setShowAskStart(false);
+
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
 
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
@@ -435,6 +455,14 @@ export default function ChatBox({ config = {} }) {
     return to the pill launcher instead of the circle.
   ======================================== */
   const closeChat = () => {
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
+    setShowAskStart(false);
     setIsOpen(false);
     setLauncherMode("pill");
   };
@@ -489,40 +517,56 @@ export default function ChatBox({ config = {} }) {
       return;
     }
 
-    // Ask flow typing indicator before showing question
+    // Ask flow typing indicator before showing the question box.
+    // This keeps the main menu hidden while the bot is "typing",
+    // then shows the Ask flow after the delay.
     if (item.id === "ask") {
-      setActiveFlowId("ask");
-
-      // Hide Ask flow first
-      setShowAskStart(false);
+      if (askTypingTimerRef.current) {
+        clearTimeout(askTypingTimerRef.current);
+      }
 
       resetFlowSelections("ask");
       syncKnownUserIntoForm();
 
-      // Show typing indicator briefly
-      setTimeout(() => {
+      setActiveFlowId(null);
+      setPendingFlowId("ask");
+      setShowAskStart(false);
+      setShowFlowTyping(true);
+
+      askTypingTimerRef.current = setTimeout(() => {
+        setShowFlowTyping(false);
+        setPendingFlowId(null);
+        setActiveFlowId("ask");
         setShowAskStart(true);
-
-        setTimeout(() => {
-          scrollRef.current?.scrollTo({
-            top: scrollRef.current.scrollHeight,
-            behavior: "smooth",
-          });
-        }, 100);
-
+        askTypingTimerRef.current = null;
       }, 1400);
 
       return;
     }
 
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
     setActiveFlowId(item.id);
     resetFlowSelections(item.id);
     syncKnownUserIntoForm();
   };
 
   const handleBackToMainMenu = () => {
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
     saveConversationMessage("Back to Main Menu", "user");
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
     setActiveFlowId(null);
+    setShowAskStart(false);
     resetFlowSelections(null);
     syncKnownUserIntoForm();
   };
@@ -534,8 +578,15 @@ export default function ChatBox({ config = {} }) {
       return;
     }
 
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
     // Used by Community, Dining, and Floor Plans buttons.
     saveConversationMessage(`Community action: ${flowId}`, "user");
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
     setActiveFlowId(flowId);
     resetFlowSelections(flowId);
     syncKnownUserIntoForm();
@@ -632,6 +683,14 @@ export default function ChatBox({ config = {} }) {
   };
 
   const resetAllFlows = () => {
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
+    setShowAskStart(false);
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
@@ -832,7 +891,7 @@ Question: ${askQuestion}`;
     }
   };
 
-  const showMainMenuButtons = !activeFlowId;
+  const showMainMenuButtons = !activeFlowId && !pendingFlowId;
   // If a client has 7 or more menu buttons,
   // only show the first 4 buttons at first.
   // This keeps large menus from feeling crowded.
@@ -1002,6 +1061,14 @@ Question: ${askQuestion}`;
               <ChatMessages messages={messages} />
 
               {showStartupTyping && (
+                <div className="chat-message bot typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              )}
+
+              {showFlowTyping && (
                 <div className="chat-message bot typing-indicator">
                   <span></span>
                   <span></span>
