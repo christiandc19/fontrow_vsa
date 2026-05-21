@@ -4,7 +4,7 @@ const asburyHeightsConfig = {
   communityName: "Asbury Heights Senior Living",
 
   logoUrl:
-    "https://cdn.websmartassistant.com/clients/asbury-heights/asbury-heights-chatbot.png",
+    "https://cdn.websmartassistant.com/clients/asbury-heights/chatbot-logo.png",
 
   headerTitle: "Smart Assistant",
   headerSubtitle: "Asbury Heights",

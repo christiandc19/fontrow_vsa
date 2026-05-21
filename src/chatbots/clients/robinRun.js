@@ -3,7 +3,7 @@ const robinRunConfig = {
   communityName: "Robin Run Village",
 
   logoUrl:
-    "https://cdn.websmartassistant.com/clients/robin-run/robin-run-chatbot.png",
+    "https://cdn.websmartassistant.com/clients/robin-run/chatbot-logo.png",
 
   headerTitle: "Smart Assistant",
   headerSubtitle: "Robin Run Village",
