@@ -223,25 +223,42 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
-  useEffect(() => {
-    if (!scrollRef.current) return;
+    /* ========================================
+      AUTO SCROLL TO LATEST MESSAGE
 
-    const timer = setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }, 100);
+      Ensures the chatbot always scrolls to the
+      newest message or newest flow content.
 
-    return () => clearTimeout(timer);
-  }, [
-    messages,
-    activeFlowId,
-    quoteSelections,
-    callSelections,
-    pricingSelections,
-    hasTypedQuestion,
-  ]);
+      This fixes the issue where the conversation
+      stays at the top after new messages appear.
+    ======================================== */
+    useEffect(() => {
+      if (!scrollRef.current) return;
+
+      // Small delay allows React DOM rendering
+      // to finish before calculating height.
+      const timer = setTimeout(() => {
+        const container = scrollRef.current;
+
+        if (!container) return;
+
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 250);
+
+      return () => clearTimeout(timer);
+    }, [
+      messages,
+      activeFlowId,
+      quoteSelections,
+      callSelections,
+      pricingSelections,
+      hasTypedQuestion,
+      showStartupTyping,
+      showAskStart,
+    ]);
 
   /* ========================================
     AUTO LAUNCH SEQUENCE
@@ -742,6 +759,13 @@ Question: ${askQuestion}`;
           leadId,
           message: conversationMessage,
           sender: "user",
+
+          // NEW:
+          // Allows backend to attach community/clientKey
+          // to older existing leads that previously
+          // had no community assigned.
+          clientKey,
+
           formKey:
             activeFlowId === "schedule"
               ? "schedule-visit-request"

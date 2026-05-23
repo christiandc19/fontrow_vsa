@@ -213,7 +213,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-
+  scroll-behavior: smooth;
   /* Single padding declaration to avoid bottom-padding conflicts */
   padding: 16px 16px 8px;
 
