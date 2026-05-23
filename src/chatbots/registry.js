@@ -1,16 +1,21 @@
-import fontrowConfig from "./clients/fontrow";
 import robinRunConfig from "./clients/robinRun";
 import wsaConfig from "./clients/wsa";
-import evergreenHeightsConfig from "./clients/evergreenHeights"; // 👈 ADD
+import evergreenHeightsConfig from "./clients/evergreenHeights";
+import asburyHeightsConfig from "./clients/asburyHeights";
 
 const chatbotRegistry = {
-  fontrow: fontrowConfig,
   "robin-run": robinRunConfig,
-  "evergreen-heights": evergreenHeightsConfig, // 👈 ADD
-  "web-smart-assistant": wsaConfig, // ✅ ADD THIS
 
+  "evergreen-heights": evergreenHeightsConfig,
+
+  "asbury-heights": asburyHeightsConfig,
+
+  "web-smart-assistant": wsaConfig,
 };
 
 export function getClientConfig(clientKey) {
-  return chatbotRegistry[clientKey] || chatbotRegistry["fontrow"];
+  return (
+    chatbotRegistry[clientKey] ||
+    chatbotRegistry["web-smart-assistant"]
+  );
 }

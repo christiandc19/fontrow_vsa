@@ -1,32 +1,33 @@
-const robinRunConfig = {
-  clientKey: "robin-run",
-  communityName: "Robin Run Village",
+const asburyHeightsConfig = {
+  clientKey: "asbury-heights",
+
+  communityName: "Asbury Heights Senior Living",
 
   logoUrl:
-    "https://cdn.websmartassistant.com/clients/robin-run/logo-chatbot.png",
+    "https://cdn.websmartassistant.com/clients/asbury-heights/logo-chatbot.png",
 
   headerTitle: "Smart Assistant",
-  headerSubtitle: "Robin Run Village",
+  headerSubtitle: "Asbury Heights",
 
   welcomeMessage:
-    "Hi there! How can we help you explore Robin Run Village today?",
+    "Hi there! How can we help you explore Asbury Heights today?",
 
   launcherTitle: "Smart Assistant",
-  launcherSubtitle: "Robin Run Village",
+  launcherSubtitle: "Asbury Heights",
 
   theme: {
-    primary: "#19606f",
-    primaryHover: "#144b56",
+    primary: "#1b2f4d",
+    primaryHover: "#15263d",
 
     headerBg: "#ffffff",
 
-    botBubbleBg: "#f3f7f8",
-    userBubbleBg: "#19606f",
+    botBubbleBg: "#f4f6fa",
+    userBubbleBg: "#1b2f4d",
 
     textDark: "#24352f",
 
     launcherBg: "#ffffff",
-    launcherAccent: "#c69c3f",
+    launcherAccent: "#D6B36A",
   },
 
   mainMenu: [
@@ -46,7 +47,7 @@ const robinRunConfig = {
   quote: {},
 
   optionsIntro:
-    "Robin Run Village offers Independent Living and a continuum of on-site care. Choose an option below to learn more.",
+    "Asbury Heights offers Independent Living and a continuum of on-site care. Choose an option below to learn more.",
 
   options: [
     {
@@ -86,7 +87,7 @@ const robinRunConfig = {
   },
 
   ask: {
-    q1: "What would you like to know about Robin Run Village?",
+    q1: "What would you like to know about Asbury Heights?",
 
     placeholder:
       "Ex: pricing, availability, levels of care, amenities, tours…",
@@ -98,4 +99,4 @@ const robinRunConfig = {
   },
 };
 
-export default robinRunConfig;
+export default asburyHeightsConfig;
