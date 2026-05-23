@@ -173,12 +173,10 @@ export default function ChatBox({ config = {} }) {
 
     If this is their first visit, start as a circle.
   ======================================== */
-  const hasSeenLauncher =
-    localStorage.getItem("wsa-launcher-seen") === "true";
+// NEW: Start hidden so the circle does not appear immediately on page load.
+  const [launcherMode, setLauncherMode] = useState("hidden");
 
-  const [launcherMode, setLauncherMode] = useState(
-    hasSeenLauncher ? "pill" : "circle"
-  );
+
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
@@ -259,43 +257,43 @@ export default function ChatBox({ config = {} }) {
     - Stay as pill
     - Do not auto-open again
   ======================================== */
-  useEffect(() => {
-    const hasSeenLauncher =
-      localStorage.getItem("wsa-launcher-seen") === "true";
+useEffect(() => {
+  // NEW: Check if visitor already saw the launcher auto-open sequence.
+  const hasSeenLauncher =
+    localStorage.getItem("wsa-launcher-seen") === "true";
 
-    // If visitor already saw the auto-launch,
-    // keep the launcher as a pill and stop here.
-    if (hasSeenLauncher) {
-      setLauncherMode("pill");
-      return;
-    }
+  // NEW: Returning visitors skip the delay and show the pill immediately.
+  if (hasSeenLauncher) {
+    setLauncherMode("pill");
+    return;
+  }
 
-    /* ========================================
-      Wait 3 seconds before starting
-      the launcher animation sequence.
-    ======================================== */
+  // NEW: After 3 seconds, show the circle launcher.
+  const circleTimer = setTimeout(() => {
+    setLauncherMode("circle");
+  }, 3000);
 
-    // After 3 seconds:
-    // circle -> pill
-    const pillTimer = setTimeout(() => {
-      setLauncherMode("pill");
-    }, 3000);
+  // NEW: After circle appears, expand it into the pill.
+  const pillTimer = setTimeout(() => {
+    setLauncherMode("pill");
+  }, 4200);
 
-    // After pill animation finishes:
-    // pill -> expanded chatbot
-    const openTimer = setTimeout(() => {
-      openChat();
+  // NEW: After pill appears, open the full chatbot.
+  const openTimer = setTimeout(() => {
+    openChat();
 
-      // Remember visitor already saw the intro animation.
-      localStorage.setItem("wsa-launcher-seen", "true");
-    }, 4200);
+    // NEW: Save that visitor already saw the auto-launch sequence.
+    localStorage.setItem("wsa-launcher-seen", "true");
+  }, 5600);
 
-    // Cleanup timers if component unmounts.
-    return () => {
-      clearTimeout(pillTimer);
-      clearTimeout(openTimer);
-    };
-  }, []);
+  // NEW: Cleanup timers if component unmounts.
+  return () => {
+    clearTimeout(circleTimer);
+    clearTimeout(pillTimer);
+    clearTimeout(openTimer);
+  };
+}, []);
+
 
 
   const openLink = (url) => {
