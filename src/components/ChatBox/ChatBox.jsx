@@ -42,6 +42,18 @@ const formatDateLabel = (iso) => {
 const normalizeEmail = (email = "") => email.trim().toLowerCase();
 const normalizePhone = (phone = "") => phone.replace(/\D/g, "");
 
+const buildVisitDateTime = (isoDate, timeStr) => {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const [time, meridiem] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+  if (meridiem === "PM" && hours !== 12) hours += 12;
+  if (meridiem === "AM" && hours === 12) hours = 0;
+  const pad = (n) => String(n).padStart(2, "0");
+  // Return a local ISO string (no Z / no UTC conversion) so the backend
+  // receives the exact date and time the visitor selected in the chatbot.
+  return `${year}-${pad(month)}-${pad(day)}T${pad(hours)}:${pad(minutes)}:00`;
+};
+
 const getFullNameFromLead = (lead) =>
   `${lead?.firstName || ""} ${lead?.lastName || ""}`.trim();
 
@@ -92,15 +104,13 @@ export default function ChatBox({ config = {} }) {
     "--chat-bot-bubble-bg": theme.botBubbleBg || "#ececec",
     "--chat-bot-bubble-text":
       theme.botBubbleText || theme.textDark || "#333333",
-    "--chat-user-bubble-bg":
-      theme.userBubbleBg || theme.primary || "#935135",
+    "--chat-user-bubble-bg": theme.userBubbleBg || theme.primary || "#935135",
     "--chat-user-bubble-text": theme.userBubbleText || "#ffffff",
     "--chat-text-dark": theme.textDark || "#333333",
     "--chat-text-light": theme.textLight || "#ffffff",
     "--chat-text-muted": theme.textMuted || "#666666",
     "--chat-launcher-bg": theme.launcherBg || "#ffffff",
-    "--chat-launcher-text":
-      theme.launcherText || theme.textDark || "#333333",
+    "--chat-launcher-text": theme.launcherText || theme.textDark || "#333333",
     "--chat-launcher-subtitle":
       theme.launcherSubtitle || theme.textMuted || "#666666",
     "--chat-launcher-accent":
@@ -177,6 +187,11 @@ export default function ChatBox({ config = {} }) {
   const [launcherMode, setLauncherMode] = useState("hidden");
 
 
+  const hasSeenLauncher = localStorage.getItem("wsa-launcher-seen") === "true";
+
+  const [launcherMode, setLauncherMode] = useState(
+    hasSeenLauncher ? "pill" : "circle",
+  );
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
@@ -295,7 +310,6 @@ useEffect(() => {
 }, []);
 
 
-
   const openLink = (url) => {
     if (!url) return;
 
@@ -358,7 +372,7 @@ useEffect(() => {
   const saveConversationMessage = async (
     message,
     sender = "user",
-    userDataParam = null
+    userDataParam = null,
   ) => {
     const dataToUse = userDataParam || foundUserData;
 
@@ -502,7 +516,6 @@ useEffect(() => {
   };
 
   const handleMainMenuSelect = (item) => {
-
     if (item.id === "show-more") {
       setShowAllMenuButtons(true);
       return;
@@ -537,6 +550,13 @@ useEffect(() => {
         setActiveFlowId("ask");
         setShowAskStart(true);
         askTypingTimerRef.current = null;
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }, 100);
       }, 1400);
 
       return;
@@ -765,7 +785,7 @@ Question: ${askQuestion}`;
       const requestLabel = activeFlowId === "demo" ? "demo" : "visit";
 
       return `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
-        callSelections.date
+        callSelections.date,
       )} at ${callSelections.time}.`;
     }
 
@@ -780,7 +800,8 @@ Question: ${askQuestion}`;
     try {
       const conversationMessage = buildConversationMessage();
       let newUserData = null;
-      const shouldAttachToFoundUser = foundUserData && contactMatchesFoundUser();
+      const shouldAttachToFoundUser =
+        foundUserData && contactMatchesFoundUser();
 
       if (shouldAttachToFoundUser) {
         const leadId = foundUserData?.id;
@@ -793,6 +814,20 @@ Question: ${askQuestion}`;
           leadId,
           message: conversationMessage,
           sender: "user",
+          formKey:
+            activeFlowId === "schedule"
+              ? "schedule-visit-request"
+              : activeFlowId || "chatbot",
+          ...(activeFlowId === "schedule" &&
+          callSelections.date &&
+          callSelections.time
+            ? {
+                visitDate: buildVisitDateTime(
+                  callSelections.date,
+                  callSelections.time,
+                ),
+              }
+            : {}),
         };
 
         const response = await fetch(`${API_BASE}/api/Conversations`, {
@@ -826,7 +861,10 @@ Question: ${askQuestion}`;
           lastName,
           phone: formData.phone,
           source: "chatbot",
-          formKey: activeFlowId || "chatbot",
+          formKey:
+            activeFlowId === "schedule"
+              ? "schedule-visit-request"
+              : activeFlowId || "chatbot",
           meta: {
             flow: activeFlowId,
             quoteSelections,
@@ -846,6 +884,16 @@ Question: ${askQuestion}`;
             Browser: navigator.userAgent,
             Referrer: window.location.origin + window.location.pathname,
           },
+          ...(activeFlowId === "schedule" &&
+          callSelections.date &&
+          callSelections.time
+            ? {
+                VisitDate: buildVisitDateTime(
+                  callSelections.date,
+                  callSelections.time,
+                ),
+              }
+            : {}),
         };
 
         await createLead(leadPayload);
@@ -991,7 +1039,9 @@ Question: ${askQuestion}`;
         <div className={`chat-launcher ${launcherMode}`} style={themeVars}>
           <button
             className="chat-launcher-main"
-            onClick={launcherMode === "circle" ? expandLauncherToPill : openChat}
+            onClick={
+              launcherMode === "circle" ? expandLauncherToPill : openChat
+            }
             type="button"
             aria-label={
               launcherMode === "circle" ? "Expand chat launcher" : "Open chat"
@@ -1035,17 +1085,20 @@ Question: ${askQuestion}`;
         <div
           className={`chatbox-container
             ${mainMenu.length >= 7 ? "chatbox-tall" : ""}
-            ${activeFlowId === "community" ||
-            activeFlowId === "dining" ||
-            activeFlowId === "floorplans"
-              ? "community-expanded"
-              : ""}
+            ${
+              activeFlowId === "community" ||
+              activeFlowId === "dining" ||
+              activeFlowId === "floorplans"
+                ? "community-expanded"
+                : ""
+            }
           `}
           style={{
             ...themeVars,
-            "--chatbox-open-height": mainMenu.length >= 7 && showAllMenuButtons ? "760px" : "650px",
+            "--chatbox-open-height":
+              mainMenu.length >= 7 && showAllMenuButtons ? "760px" : "650px",
           }}
->
+        >
           <ChatHeader
             onClose={closeChat}
             title={headerTitle}
@@ -1054,7 +1107,6 @@ Question: ${askQuestion}`;
           />
 
           <div className="chatbox-main" ref={scrollRef}>
-
             <div className="chat-scroll-stack">
               <ChatMessages messages={messages} />
 
@@ -1100,7 +1152,6 @@ Question: ${askQuestion}`;
             onSelect={handleMainMenuSelect}
             className={showAllMenuButtons ? "menu-expanded-animate" : ""}
           />
-
         </div>
       )}
     </>
