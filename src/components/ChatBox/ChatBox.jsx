@@ -189,9 +189,6 @@ export default function ChatBox({ config = {} }) {
 
   const hasSeenLauncher = localStorage.getItem("wsa-launcher-seen") === "true";
 
-  const [launcherMode, setLauncherMode] = useState(
-    hasSeenLauncher ? "pill" : "circle",
-  );
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
