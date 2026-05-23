@@ -60,6 +60,7 @@ const getFullNameFromLead = (lead) =>
 export default function ChatBox({ config = {} }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const askTypingTimerRef = useRef(null);
 
   const clientKey = config?.clientKey || "default";
   const brandConfig = getBotConfig(clientKey);
@@ -182,11 +183,12 @@ export default function ChatBox({ config = {} }) {
 
     If this is their first visit, start as a circle.
   ======================================== */
+// NEW: Start hidden so the circle does not appear immediately on page load.
+  const [launcherMode, setLauncherMode] = useState("hidden");
+
+
   const hasSeenLauncher = localStorage.getItem("wsa-launcher-seen") === "true";
 
-  const [launcherMode, setLauncherMode] = useState(
-    hasSeenLauncher ? "pill" : "circle",
-  );
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
@@ -198,6 +200,8 @@ export default function ChatBox({ config = {} }) {
   const [hasTypedQuestion, setHasTypedQuestion] = useState(false);
   // Controls the typing animation before Ask flow appears
   const [showAskStart, setShowAskStart] = useState(false);
+  const [pendingFlowId, setPendingFlowId] = useState(null);
+  const [showFlowTyping, setShowFlowTyping] = useState(false);
   const [pendingConversations, setPendingConversations] = useState([]);
   const [showStartupTyping, setShowStartupTyping] = useState(false);
   const [pricingSelections, setPricingSelections] = useState(initialPricing);
@@ -241,7 +245,17 @@ export default function ChatBox({ config = {} }) {
     callSelections,
     pricingSelections,
     hasTypedQuestion,
+    showFlowTyping,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (askTypingTimerRef.current) {
+        clearTimeout(askTypingTimerRef.current);
+      }
+    };
+  }, []);
+
 
   /* ========================================
     AUTO LAUNCH SEQUENCE
@@ -255,43 +269,43 @@ export default function ChatBox({ config = {} }) {
     - Stay as pill
     - Do not auto-open again
   ======================================== */
-  useEffect(() => {
-    const hasSeenLauncher =
-      localStorage.getItem("wsa-launcher-seen") === "true";
+useEffect(() => {
+  // NEW: Check if visitor already saw the launcher auto-open sequence.
+  const hasSeenLauncher =
+    localStorage.getItem("wsa-launcher-seen") === "true";
 
-    // If visitor already saw the auto-launch,
-    // keep the launcher as a pill and stop here.
-    if (hasSeenLauncher) {
-      setLauncherMode("pill");
-      return;
-    }
+  // NEW: Returning visitors skip the delay and show the pill immediately.
+  if (hasSeenLauncher) {
+    setLauncherMode("pill");
+    return;
+  }
 
-    /* ========================================
-      Wait 3 seconds before starting
-      the launcher animation sequence.
-    ======================================== */
+  // NEW: After 3 seconds, show the circle launcher.
+  const circleTimer = setTimeout(() => {
+    setLauncherMode("circle");
+  }, 3000);
 
-    // After 3 seconds:
-    // circle -> pill
-    const pillTimer = setTimeout(() => {
-      setLauncherMode("pill");
-    }, 3000);
+  // NEW: After circle appears, expand it into the pill.
+  const pillTimer = setTimeout(() => {
+    setLauncherMode("pill");
+  }, 4200);
 
-    // After pill animation finishes:
-    // pill -> expanded chatbot
-    const openTimer = setTimeout(() => {
-      openChat();
+  // NEW: After pill appears, open the full chatbot.
+  const openTimer = setTimeout(() => {
+    openChat();
 
-      // Remember visitor already saw the intro animation.
-      localStorage.setItem("wsa-launcher-seen", "true");
-    }, 4200);
+    // NEW: Save that visitor already saw the auto-launch sequence.
+    localStorage.setItem("wsa-launcher-seen", "true");
+  }, 5600);
 
-    // Cleanup timers if component unmounts.
-    return () => {
-      clearTimeout(pillTimer);
-      clearTimeout(openTimer);
-    };
-  }, []);
+  // NEW: Cleanup timers if component unmounts.
+  return () => {
+    clearTimeout(circleTimer);
+    clearTimeout(pillTimer);
+    clearTimeout(openTimer);
+  };
+}, []);
+
 
   const openLink = (url) => {
     if (!url) return;
@@ -403,6 +417,14 @@ export default function ChatBox({ config = {} }) {
     setShowAllMenuButtons(false);
 
     setShowStartupTyping(true);
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
+    setShowAskStart(false);
+
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
 
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
@@ -442,6 +464,14 @@ export default function ChatBox({ config = {} }) {
     return to the pill launcher instead of the circle.
   ======================================== */
   const closeChat = () => {
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
+    setShowAskStart(false);
     setIsOpen(false);
     setLauncherMode("pill");
   };
@@ -495,19 +525,28 @@ export default function ChatBox({ config = {} }) {
       return;
     }
 
-    // Ask flow typing indicator before showing question
+    // Ask flow typing indicator before showing the question box.
+    // This keeps the main menu hidden while the bot is "typing",
+    // then shows the Ask flow after the delay.
     if (item.id === "ask") {
-      setActiveFlowId("ask");
-
-      // Hide Ask flow first
-      setShowAskStart(false);
+      if (askTypingTimerRef.current) {
+        clearTimeout(askTypingTimerRef.current);
+      }
 
       resetFlowSelections("ask");
       syncKnownUserIntoForm();
 
-      // Show typing indicator briefly
-      setTimeout(() => {
+      setActiveFlowId(null);
+      setPendingFlowId("ask");
+      setShowAskStart(false);
+      setShowFlowTyping(true);
+
+      askTypingTimerRef.current = setTimeout(() => {
+        setShowFlowTyping(false);
+        setPendingFlowId(null);
+        setActiveFlowId("ask");
         setShowAskStart(true);
+        askTypingTimerRef.current = null;
 
         setTimeout(() => {
           scrollRef.current?.scrollTo({
@@ -520,14 +559,29 @@ export default function ChatBox({ config = {} }) {
       return;
     }
 
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
     setActiveFlowId(item.id);
     resetFlowSelections(item.id);
     syncKnownUserIntoForm();
   };
 
   const handleBackToMainMenu = () => {
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
     saveConversationMessage("Back to Main Menu", "user");
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
     setActiveFlowId(null);
+    setShowAskStart(false);
     resetFlowSelections(null);
     syncKnownUserIntoForm();
   };
@@ -539,8 +593,15 @@ export default function ChatBox({ config = {} }) {
       return;
     }
 
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
     // Used by Community, Dining, and Floor Plans buttons.
     saveConversationMessage(`Community action: ${flowId}`, "user");
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
     setActiveFlowId(flowId);
     resetFlowSelections(flowId);
     syncKnownUserIntoForm();
@@ -637,6 +698,14 @@ export default function ChatBox({ config = {} }) {
   };
 
   const resetAllFlows = () => {
+    if (askTypingTimerRef.current) {
+      clearTimeout(askTypingTimerRef.current);
+      askTypingTimerRef.current = null;
+    }
+
+    setShowFlowTyping(false);
+    setPendingFlowId(null);
+    setShowAskStart(false);
     setActiveFlowId(null);
     setQuoteSelections(initialQuote);
     setCallSelections(initialCall);
@@ -865,7 +934,7 @@ Question: ${askQuestion}`;
     }
   };
 
-  const showMainMenuButtons = !activeFlowId;
+  const showMainMenuButtons = !activeFlowId && !pendingFlowId;
   // If a client has 7 or more menu buttons,
   // only show the first 4 buttons at first.
   // This keeps large menus from feeling crowded.
@@ -1039,6 +1108,14 @@ Question: ${askQuestion}`;
               <ChatMessages messages={messages} />
 
               {showStartupTyping && (
+                <div className="chat-message bot typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              )}
+
+              {showFlowTyping && (
                 <div className="chat-message bot typing-indicator">
                   <span></span>
                   <span></span>
