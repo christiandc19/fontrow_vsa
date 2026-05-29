@@ -149,6 +149,7 @@ export default function FlowRenderer({
       );
 
     case "options":
+    case "living-options":
       return <OptionsFlow config={mergedConfig} onBack={onBack} />;
 
     case "community":

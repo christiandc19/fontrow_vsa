@@ -57,6 +57,39 @@ const buildVisitDateTime = (isoDate, timeStr) => {
 const getFullNameFromLead = (lead) =>
   `${lead?.firstName || ""} ${lead?.lastName || ""}`.trim();
 
+// ========================================
+// LEAD ACTIVITY TRACKING
+//
+// Saves CRM-style activity events
+// such as button clicks and link clicks.
+// ========================================
+const saveLeadActivity = async (
+  leadId,
+  activityType,
+  title,
+  description = null,
+  url = null,
+) => {
+  try {
+    if (!leadId) return;
+
+    await fetch(`${API_BASE}/api/LeadActivities`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        leadId,
+        activityType,
+        title,
+        description,
+        url,
+        source: "chatbot",
+      }),
+    });
+  } catch (err) {
+    console.error("Lead activity save failed:", err);
+  }
+};
+
 export default function ChatBox({ config = {} }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -293,17 +326,29 @@ export default function ChatBox({ config = {} }) {
     };
   }, []);
 
-  const openLink = (url) => {
-    if (!url) return;
+    const openLink = (url, label = "Link") => {
+      if (!url) return;
 
-    if (url.startsWith("/")) {
-      navigate(url);
-      setIsOpen(false);
-      return;
-    }
+      // NEW:
+      // Track outbound link click
+      if (foundUserData?.id) {
+        saveLeadActivity(
+          foundUserData.id,
+          "LinkClicked",
+          `Opened ${label}`,
+          null,
+          url
+        );
+      }
 
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+      if (url.startsWith("/")) {
+        navigate(url);
+        setIsOpen(false);
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    };
 
   const checkUserByIP = async (updateFormData = true) => {
     try {
@@ -426,14 +471,14 @@ export default function ChatBox({ config = {} }) {
       },
     ]);
 
-    const userData = await checkUserByIP();
+    // Do not prefill contact form from IP.
+    // This prevents the chatbot from accidentally reusing another lead
+    // from the same computer/network.
+    setFormData(initialForm);
+    setFoundUserData(null);
 
-    if (!userData) {
-      setFormData(initialForm);
-    }
-
-    await saveConversationMessage(welcomeMessage, "bot", userData);
-  };
+    await saveConversationMessage(welcomeMessage, "bot", null);
+      };
 
   /* ========================================
     CLOSE FULL CHATBOT
@@ -490,8 +535,18 @@ export default function ChatBox({ config = {} }) {
 
     saveConversationMessage(item.label, "user");
 
+    // NEW:
+    // Save chatbot button activity
+    if (foundUserData?.id) {
+      saveLeadActivity(
+        foundUserData.id,
+        "ButtonClicked",
+        `Clicked ${item.label}`
+      );
+    }
+    
     if (item.type === "link") {
-      openLink(item.url);
+      openLink(item.url, item.label);
       return;
     }
 
@@ -551,7 +606,7 @@ export default function ChatBox({ config = {} }) {
     if (!svc) return;
 
     saveConversationMessage(`Service: ${svc.label}`, "user");
-    openLink(svc.url);
+    openLink(svc.url, svc.label);
   };
 
   const handleProjectSelect = (label) => {
@@ -559,7 +614,7 @@ export default function ChatBox({ config = {} }) {
     if (!project) return;
 
     saveConversationMessage(`Industry: ${project.label}`, "user");
-    openLink(project.url);
+    openLink(project.url, project.label);
   };
 
   const handleSelectProjectType = (option) => {
