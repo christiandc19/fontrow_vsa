@@ -105,8 +105,16 @@ export default function CommunityFlow({ community, onSelectFlow }) {
           </div>
         )}
 
+
+      {!hasTabs && community?.title && (
+        <div className="community-gallery-label">
+          {community.title.replace("View ", "")}
+        </div>
+      )}
+
         <div className="community-gallery">
-          {images.length > 1 && (
+
+                      {images.length > 1 && (
             <button
               type="button"
               className="gallery-arrow left"

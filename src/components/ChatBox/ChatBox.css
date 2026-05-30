@@ -1039,13 +1039,23 @@
 }
 
 .chatbox-container.community-expanded .community-gallery {
-  /* Leaves room for tabs and thumbnails */
-  height: calc(100vh - 210px);
-  max-height: 620px;
+  height: calc(100vh - 260px);
+  max-height: 540px;
 
   overflow: hidden;
 
   border-radius: 22px;
+}
+
+.chatbox-container.community-expanded .community-actions {
+  width: 260px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  overflow-y: auto;
+  padding-bottom: 24px;
 }
 
 .chatbox-container.community-expanded .community-image {
@@ -1240,6 +1250,18 @@
    RESPONSIVE
 ======================================== */
 @media (max-width: 768px) {
+
+.chatbox-container.community-expanded .community-gallery {
+  height: 320px;
+  max-height: 320px;
+}
+
+.chatbox-container.community-expanded .community-actions {
+  width: 100%;
+  overflow-y: visible;
+  padding-bottom: 18px;
+}
+
   .chatbox-container {
     width: calc(100vw - 20px);
     height: 78vh;

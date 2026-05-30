@@ -4,24 +4,30 @@ const robinRunConfig = {
 
   logoUrl:
     "https://cdn.websmartassistant.com/clients/robin-run/robin-run-logo.webp",
+    "https://cdn.websmartassistant.com/clients/robin-run/logo-chatbot.png",
 
-  headerTitle: "Chat with Robin Run Village",
-  headerSubtitle: "We’re here to help you explore senior living options.",
+  headerTitle: "Smart Assistant",
+  headerSubtitle: "Robin Run Village",
+
   welcomeMessage:
     "Hi there! How can we help you explore Robin Run Village today?",
 
-  launcherTitle: "Robin Run Village",
-  launcherSubtitle: "Chat with our team",
+  launcherTitle: "Smart Assistant",
+  launcherSubtitle: "Robin Run Village",
 
   theme: {
-    primary: "#16335b",
-    primaryHover: "#122847",
+    primary: "#19606f",
+    primaryHover: "#144b56",
+
     headerBg: "#ffffff",
-    botBubbleBg: "#f3f4f6",
-    userBubbleBg: "#16335b",
-    textDark: "#1f2937",
+
+    botBubbleBg: "#f3f7f8",
+    userBubbleBg: "#19606f",
+
+    textDark: "#24352f",
+
     launcherBg: "#ffffff",
-    launcherAccent: "#16335b",
+    launcherAccent: "#c69c3f",
   },
 
   mainMenu: [
@@ -252,8 +258,7 @@ const robinRunConfig = {
   ],
 
   schedule: {
-    intro: "Let’s schedule a time to visit Robin Run Village.",
-    q1: "What day works best for your tour?",
+    q1: "What day works best for your visit?",
     q2: "What time works best?",
     contactPrompt:
       "Please confirm or update your contact details and we’ll confirm your tour.",
