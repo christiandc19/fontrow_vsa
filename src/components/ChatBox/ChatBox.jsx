@@ -57,6 +57,39 @@ const buildVisitDateTime = (isoDate, timeStr) => {
 const getFullNameFromLead = (lead) =>
   `${lead?.firstName || ""} ${lead?.lastName || ""}`.trim();
 
+// ========================================
+// LEAD ACTIVITY TRACKING
+//
+// Saves CRM-style activity events
+// such as button clicks and link clicks.
+// ========================================
+const saveLeadActivity = async (
+  leadId,
+  activityType,
+  title,
+  description = null,
+  url = null,
+) => {
+  try {
+    if (!leadId) return;
+
+    await fetch(`${API_BASE}/api/LeadActivities`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        leadId,
+        activityType,
+        title,
+        description,
+        url,
+        source: "chatbot",
+      }),
+    });
+  } catch (err) {
+    console.error("Lead activity save failed:", err);
+  }
+};
+
 export default function ChatBox({ config = {} }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -227,26 +260,42 @@ export default function ChatBox({ config = {} }) {
     "3:00 PM",
   ];
 
-  useEffect(() => {
-    if (!scrollRef.current) return;
+    /* ========================================
+      AUTO SCROLL TO LATEST MESSAGE
 
-    const timer = setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }, 100);
+      Ensures the chatbot always scrolls to the
+      newest message or newest flow content.
 
-    return () => clearTimeout(timer);
-  }, [
-    messages,
-    activeFlowId,
-    quoteSelections,
-    callSelections,
-    pricingSelections,
-    hasTypedQuestion,
-    showFlowTyping,
-  ]);
+      This fixes the issue where the conversation
+      stays at the top after new messages appear.
+    ======================================== */
+    useEffect(() => {
+      if (!scrollRef.current) return;
+
+      // Small delay allows React DOM rendering
+      // to finish before calculating height.
+      const timer = setTimeout(() => {
+        const container = scrollRef.current;
+
+        if (!container) return;
+
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 250);
+
+      return () => clearTimeout(timer);
+    }, [
+      messages,
+      activeFlowId,
+      quoteSelections,
+      callSelections,
+      pricingSelections,
+      hasTypedQuestion,
+      showStartupTyping,
+      showAskStart,
+    ]);
 
   useEffect(() => {
     return () => {
@@ -307,17 +356,29 @@ useEffect(() => {
 }, []);
 
 
-  const openLink = (url) => {
-    if (!url) return;
+    const openLink = (url, label = "Link") => {
+      if (!url) return;
 
-    if (url.startsWith("/")) {
-      navigate(url);
-      setIsOpen(false);
-      return;
-    }
+      // NEW:
+      // Track outbound link click
+      if (foundUserData?.id) {
+        saveLeadActivity(
+          foundUserData.id,
+          "LinkClicked",
+          `Opened ${label}`,
+          null,
+          url
+        );
+      }
 
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+      if (url.startsWith("/")) {
+        navigate(url);
+        setIsOpen(false);
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    };
 
   const checkUserByIP = async (updateFormData = true) => {
     try {
@@ -448,14 +509,14 @@ useEffect(() => {
       },
     ]);
 
-    const userData = await checkUserByIP();
+    // Do not prefill contact form from IP.
+    // This prevents the chatbot from accidentally reusing another lead
+    // from the same computer/network.
+    setFormData(initialForm);
+    setFoundUserData(null);
 
-    if (!userData) {
-      setFormData(initialForm);
-    }
-
-    await saveConversationMessage(welcomeMessage, "bot", userData);
-  };
+    await saveConversationMessage(welcomeMessage, "bot", null);
+      };
 
   /* ========================================
     CLOSE FULL CHATBOT
@@ -520,8 +581,18 @@ useEffect(() => {
 
     saveConversationMessage(item.label, "user");
 
+    // NEW:
+    // Save chatbot button activity
+    if (foundUserData?.id) {
+      saveLeadActivity(
+        foundUserData.id,
+        "ButtonClicked",
+        `Clicked ${item.label}`
+      );
+    }
+    
     if (item.type === "link") {
-      openLink(item.url);
+      openLink(item.url, item.label);
       return;
     }
 
@@ -612,7 +683,7 @@ useEffect(() => {
     if (!svc) return;
 
     saveConversationMessage(`Service: ${svc.label}`, "user");
-    openLink(svc.url);
+    openLink(svc.url, svc.label);
   };
 
   const handleProjectSelect = (label) => {
@@ -620,7 +691,7 @@ useEffect(() => {
     if (!project) return;
 
     saveConversationMessage(`Industry: ${project.label}`, "user");
-    openLink(project.url);
+    openLink(project.url, project.label);
   };
 
   const handleSelectProjectType = (option) => {
@@ -811,6 +882,13 @@ Question: ${askQuestion}`;
           leadId,
           message: conversationMessage,
           sender: "user",
+
+          // NEW:
+          // Allows backend to attach community/clientKey
+          // to older existing leads that previously
+          // had no community assigned.
+          clientKey,
+
           formKey:
             activeFlowId === "schedule"
               ? "schedule-visit-request"
