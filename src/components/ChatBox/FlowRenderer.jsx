@@ -32,19 +32,22 @@ export default function FlowRenderer({
     callTimeSlots,
   } = flowData;
 
-  const {
-    quoteSelections,
-    callSelections,
-    pricingSelections,
-    hasTypedQuestion,
-    askQuestion,
-    setAskQuestion,
-    formData,
-    isSubmittingLead,
+    const {
+      quoteSelections,
+      callSelections,
+      pricingSelections,
+      hasTypedQuestion,
+      askQuestion,
+      setAskQuestion,
+      formData,
+      isSubmittingLead,
 
-    // Ask flow typing animation
-    showAskStart,
-  } = flowState;
+      // Ask flow typing animation
+      showAskStart,
+
+      savedLead,
+      isLeadLocked,
+    } = flowState;
 
   const {
     showQuoteForm,
@@ -132,20 +135,20 @@ export default function FlowRenderer({
 
     case "ask":
       return (
-        <AskFlow
-          askCfg={askCfg}
-          showAskStart={showAskStart}
-          hasTypedQuestion={hasTypedQuestion}
-          askQuestion={askQuestion}
-          setAskQuestion={setAskQuestion}
-          showAskForm={showAskForm}
-          showAskSubmit={showAskSubmit}
-          formData={formData}
-          onFormChange={handleFormChange}
-          onAskQuestionSubmit={handleAskQuestionSubmit}
-          onSubmitForm={handleSubmitForm}
-          isSubmittingLead={isSubmittingLead}
-        />
+      <AskFlow
+        askCfg={askCfg}
+        showAskStart={showAskStart}
+        hasTypedQuestion={hasTypedQuestion}
+        askQuestion={askQuestion}
+        setAskQuestion={setAskQuestion}
+        formData={formData}
+        onFormChange={handleFormChange}
+        onAskQuestionSubmit={handleAskQuestionSubmit}
+        onSubmitForm={handleSubmitForm}
+        isSubmittingLead={isSubmittingLead}
+        isLeadLocked={isLeadLocked}
+        savedLead={savedLead}
+      />
       );
 
     case "options":
@@ -191,6 +194,8 @@ export default function FlowRenderer({
           onFormChange={handleFormChange}
           onSubmitForm={handleSubmitForm}
           isSubmittingLead={isSubmittingLead}
+          isLeadLocked={isLeadLocked}
+          savedLead={savedLead}
         />
       );
 

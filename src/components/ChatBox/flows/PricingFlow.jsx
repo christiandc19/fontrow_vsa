@@ -10,6 +10,8 @@ export default function PricingFlow({
   onFormChange,
   onSubmitForm,
   isSubmittingLead,
+  isLeadLocked,
+  savedLead,
 }) {
   const livingOptions = pricingCfg?.livingOptions || [];
   const inquiryForOptions = pricingCfg?.inquiryForOptions || [];
@@ -233,29 +235,32 @@ export default function PricingFlow({
 
           <form className="chat-form" onSubmit={onSubmitForm}>
             <input
-              type="text"
               name="name"
-              placeholder="Full Name"
-              value={formData.name}
+              value={isLeadLocked ? savedLead?.name || "" : formData.name}
               onChange={onFormChange}
+              placeholder="Full Name"
               required
+              disabled={isLeadLocked}
             />
 
             <input
               type="email"
               name="email"
-              placeholder="Email"
-              value={formData.email}
+              value={isLeadLocked ? savedLead?.email || "" : formData.email}
               onChange={onFormChange}
+              placeholder="Email"
               required
+              disabled={isLeadLocked}
             />
 
             <input
               type="tel"
               name="phone"
-              placeholder="Phone"
-              value={formData.phone}
+              value={isLeadLocked ? savedLead?.phone || "" : formData.phone}
               onChange={onFormChange}
+              placeholder="Phone"
+              required
+              disabled={isLeadLocked}
             />
 
             <button
