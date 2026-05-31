@@ -14,6 +14,8 @@ export default function ScheduleFlow({
   onFormChange,
   onSubmitForm,
   isSubmittingLead,
+  isLeadLocked = false,
+  savedLead = null,
 }) {
   const hasSelectedDate = !!callSelections.date;
   const hasSelectedDateAndTime = !!(callSelections.date && callSelections.time);
@@ -21,16 +23,22 @@ export default function ScheduleFlow({
   const [showScheduleStart, setShowScheduleStart] = useState(false);
   const [showTimeQuestion, setShowTimeQuestion] = useState(false);
 
+  const contactName = isLeadLocked ? savedLead?.name || "" : formData.name;
+  const contactEmail = isLeadLocked ? savedLead?.email || "" : formData.email;
+  const contactPhone = isLeadLocked ? savedLead?.phone || "" : formData.phone;
+
   const scrollToBottom = () => {
     setTimeout(() => {
-      document.querySelector(".chatbox-main")?.scrollTo({
-        top: document.querySelector(".chatbox-main")?.scrollHeight,
+      const chatMain = document.querySelector(".chatbox-main");
+      if (!chatMain) return;
+
+      chatMain.scrollTo({
+        top: chatMain.scrollHeight,
         behavior: "smooth",
       });
     }, 50);
   };
 
-  // Show typing indicator before the first schedule question appears
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowScheduleStart(true);
@@ -40,7 +48,6 @@ export default function ScheduleFlow({
     return () => clearTimeout(timer);
   }, []);
 
-  // Show typing indicator before the time question appears
   useEffect(() => {
     if (!callSelections.date) {
       setShowTimeQuestion(false);
@@ -115,35 +122,40 @@ export default function ScheduleFlow({
           {hasSelectedDateAndTime && (
             <div className="step-block">
               <div className="step-question">
-                {scheduleCfg.contactPrompt ||
-                  "Please confirm or update your contact details and we’ll confirm your visit."}
+                {isLeadLocked
+                  ? "Your contact details are saved. You can submit another visit request with the same contact information."
+                  : scheduleCfg.contactPrompt ||
+                    "Please confirm or update your contact details and we’ll confirm your visit."}
               </div>
 
               <form className="chat-form" onSubmit={onSubmitForm}>
                 <input
                   name="name"
-                  value={formData.name}
+                  value={contactName}
                   onChange={onFormChange}
                   placeholder="First & Last Name"
                   required
+                  disabled={isLeadLocked}
                 />
 
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
+                  value={contactEmail}
                   onChange={onFormChange}
                   placeholder="Email"
                   required
+                  disabled={isLeadLocked}
                 />
 
                 <input
                   type="tel"
                   name="phone"
-                  value={formData.phone}
+                  value={contactPhone}
                   onChange={onFormChange}
                   placeholder="Phone"
                   required
+                  disabled={isLeadLocked}
                 />
 
                 <button
