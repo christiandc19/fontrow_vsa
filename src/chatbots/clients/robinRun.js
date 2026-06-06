@@ -4,7 +4,6 @@ const robinRunConfig = {
 
   logoUrl:
     "https://cdn.websmartassistant.com/clients/robin-run/robin-run-logo.webp",
-    "https://cdn.websmartassistant.com/clients/robin-run/logo-chatbot.png",
 
   headerTitle: "Smart Assistant",
   headerSubtitle: "Robin Run Village",

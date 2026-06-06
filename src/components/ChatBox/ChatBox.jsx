@@ -219,13 +219,23 @@ export default function ChatBox({ config = {} }) {
 // NEW: Start hidden so the circle does not appear immediately on page load.
   const [launcherMode, setLauncherMode] = useState("hidden");
 
-
-  const hasSeenLauncher = localStorage.getItem("wsa-launcher-seen") === "true";
-
   const [messages, setMessages] = useState([]);
   const [activeFlowId, setActiveFlowId] = useState(null);
   const [foundUserData, setFoundUserData] = useState(null);
   const [formData, setFormData] = useState(initialForm);
+  const [savedLead, setSavedLead] = useState(() => {
+    try {
+      const clientSavedLead = localStorage.getItem(
+        `wsa_chatbot_lead_submitted_${clientKey}`
+      );
+
+      const legacySavedLead = localStorage.getItem("wsa_chatbot_lead_submitted");
+
+      return JSON.parse(clientSavedLead || legacySavedLead || "null");
+    } catch {
+      return null;
+    }
+  });
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [quoteSelections, setQuoteSelections] = useState(initialQuote);
   const [callSelections, setCallSelections] = useState(initialCall);
@@ -259,6 +269,16 @@ export default function ChatBox({ config = {} }) {
     "2:00 PM",
     "3:00 PM",
   ];
+
+  useEffect(() => {
+    if (!savedLead?.submitted) return;
+
+    setFormData({
+      name: savedLead.name || "",
+      email: savedLead.email || "",
+      phone: savedLead.phone || "",
+    });
+  }, [savedLead]);
 
     /* ========================================
       AUTO SCROLL TO LATEST MESSAGE
@@ -306,6 +326,10 @@ export default function ChatBox({ config = {} }) {
   }, []);
 
 
+
+
+
+
   /* ========================================
     AUTO LAUNCH SEQUENCE
 
@@ -318,6 +342,8 @@ export default function ChatBox({ config = {} }) {
     - Stay as pill
     - Do not auto-open again
   ======================================== */
+
+/* eslint-disable react-hooks/exhaustive-deps */
 useEffect(() => {
   // NEW: Check if visitor already saw the launcher auto-open sequence.
   const hasSeenLauncher =
@@ -353,7 +379,11 @@ useEffect(() => {
     clearTimeout(pillTimer);
     clearTimeout(openTimer);
   };
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
+
+
+
 
 
     const openLink = (url, label = "Link") => {
@@ -404,25 +434,25 @@ useEffect(() => {
     }
   };
 
-  const contactMatchesFoundUser = () => {
+  const contactMatchesFoundUser = (contactData = formData) => {
     if (!foundUserData) return false;
 
     const foundEmail = normalizeEmail(foundUserData.email);
-    const enteredEmail = normalizeEmail(formData.email);
+    const enteredEmail = normalizeEmail(contactData.email);
 
     if (foundEmail && enteredEmail) {
       return foundEmail === enteredEmail;
     }
 
     const foundPhone = normalizePhone(foundUserData.phone);
-    const enteredPhone = normalizePhone(formData.phone);
+    const enteredPhone = normalizePhone(contactData.phone);
 
     if (foundPhone && enteredPhone) {
       return foundPhone === enteredPhone;
     }
 
     const foundName = getFullNameFromLead(foundUserData).toLowerCase();
-    const enteredName = formData.name.trim().toLowerCase();
+    const enteredName = contactData.name.trim().toLowerCase();
 
     return !!foundName && !!enteredName && foundName === enteredName;
   };
@@ -510,9 +540,18 @@ useEffect(() => {
     ]);
 
     // Do not prefill contact form from IP.
-    // This prevents the chatbot from accidentally reusing another lead
-    // from the same computer/network.
-    setFormData(initialForm);
+    // If this browser already submitted contact info, reuse it and lock
+    // only the contact fields. Otherwise start with an empty form.
+    if (savedLead?.submitted) {
+      setFormData({
+        name: savedLead.name || "",
+        email: savedLead.email || "",
+        phone: savedLead.phone || "",
+      });
+    } else {
+      setFormData(initialForm);
+    }
+
     setFoundUserData(null);
 
     await saveConversationMessage(welcomeMessage, "bot", null);
@@ -547,6 +586,15 @@ useEffect(() => {
   };
 
   const syncKnownUserIntoForm = () => {
+    if (savedLead?.submitted) {
+      setFormData({
+        name: savedLead.name || "",
+        email: savedLead.email || "",
+        phone: savedLead.phone || "",
+      });
+      return;
+    }
+
     if (foundUserData && formData.name === "") {
       setFormData({
         name: getFullNameFromLead(foundUserData),
@@ -606,7 +654,8 @@ useEffect(() => {
 
       resetFlowSelections("ask");
       syncKnownUserIntoForm();
-
+      setAskQuestion("");
+      setHasTypedQuestion(false);
       setActiveFlowId(null);
       setPendingFlowId("ask");
       setShowAskStart(false);
@@ -784,7 +833,13 @@ useEffect(() => {
     setAskQuestion("");
     setHasTypedQuestion(false);
 
-    if (!foundUserData) {
+    if (savedLead?.submitted) {
+      setFormData({
+        name: savedLead.name || "",
+        email: savedLead.email || "",
+        phone: savedLead.phone || "",
+      });
+    } else if (!foundUserData) {
       setFormData(initialForm);
     } else {
       setFormData({
@@ -795,7 +850,7 @@ useEffect(() => {
     }
   };
 
-  const buildConversationMessage = () => {
+  const buildConversationMessage = (contactData = formData) => {
     if (activeFlowId === "quote") {
       return `Quote Request: ${JSON.stringify(quoteSelections)}`;
     }
@@ -803,9 +858,9 @@ useEffect(() => {
     if (activeFlowId === "pricing") {
       return `Pricing Request
 
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
+Name: ${contactData.name}
+Email: ${contactData.email}
+Phone: ${contactData.phone}
 
 Living Option: ${pricingSelections.livingOption}
 For: ${pricingSelections.inquiryFor}
@@ -815,9 +870,9 @@ Timeline: ${pricingSelections.timeline}`;
     if (activeFlowId === "schedule") {
       return `Schedule Visit Request
 
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
+Name: ${contactData.name}
+Email: ${contactData.email}
+Phone: ${contactData.phone}
 
 Date: ${formatDateLabel(callSelections.date)}
 Time: ${callSelections.time}`;
@@ -830,9 +885,9 @@ Time: ${callSelections.time}`;
     if (activeFlowId === "ask") {
       return `Question Request
 
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
+Name: ${contactData.name}
+Email: ${contactData.email}
+Phone: ${contactData.phone}
 
 Question: ${askQuestion}`;
     }
@@ -840,24 +895,24 @@ Question: ${askQuestion}`;
     return `Lead from chatbot (${activeFlowId || "main_menu"})`;
   };
 
-  const buildBotReply = () => {
+  const buildBotReply = (contactData = formData) => {
     if (activeFlowId === "ask") {
-      return `Thanks, ${formData.name}! We received your question and our team will reach out soon.`;
+      return `Thanks, ${contactData.name}! We received your question and our team will reach out soon.`;
     }
 
     if (activeFlowId === "pricing") {
-      return `Thanks, ${formData.name}! We received your pricing request and our team will follow up shortly.`;
+      return `Thanks, ${contactData.name}! We received your pricing request and our team will follow up shortly.`;
     }
 
     if (isSchedulingFlow && callSelections.date && callSelections.time) {
       const requestLabel = activeFlowId === "demo" ? "demo" : "visit";
 
-      return `Thank you, ${formData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
+      return `Thank you, ${contactData.name}! We'll confirm your ${requestLabel} on ${formatDateLabel(
         callSelections.date,
       )} at ${callSelections.time}.`;
     }
 
-    return `Thank you, ${formData.name}! A team member will reach out soon.`;
+    return `Thank you, ${contactData.name}! A team member will reach out soon.`;
   };
 
   const handleSubmitForm = async (e) => {
@@ -865,11 +920,19 @@ Question: ${askQuestion}`;
 
     setIsSubmittingLead(true);
 
+    const contactData = savedLead?.submitted
+      ? {
+          name: savedLead.name || "",
+          email: savedLead.email || "",
+          phone: savedLead.phone || "",
+        }
+      : formData;
+
     try {
-      const conversationMessage = buildConversationMessage();
+      const conversationMessage = buildConversationMessage(contactData);
       let newUserData = null;
       const shouldAttachToFoundUser =
-        foundUserData && contactMatchesFoundUser();
+        foundUserData && contactMatchesFoundUser(contactData);
 
       if (shouldAttachToFoundUser) {
         const leadId = foundUserData?.id;
@@ -916,7 +979,7 @@ Question: ${askQuestion}`;
           throw new Error(`Failed to save conversation: ${errorText}`);
         }
       } else {
-        const [firstName = "", ...rest] = formData.name.trim().split(" ");
+        const [firstName = "", ...rest] = contactData.name.trim().split(" ");
         const lastName = rest.join(" ");
 
         let userIP = null;
@@ -931,10 +994,10 @@ Question: ${askQuestion}`;
 
         const leadPayload = {
           clientKey,
-          email: formData.email,
+          email: contactData.email,
           firstName,
           lastName,
-          phone: formData.phone,
+          phone: contactData.phone,
           source: "chatbot",
           formKey:
             activeFlowId === "schedule"
@@ -981,7 +1044,26 @@ Question: ${askQuestion}`;
         }
       }
 
-      const botReply = buildBotReply();
+      const savedLeadData = {
+        submitted: true,
+        name: contactData.name,
+        email: contactData.email,
+        phone: contactData.phone,
+      };
+
+      localStorage.setItem(
+        `wsa_chatbot_lead_submitted_${clientKey}`,
+        JSON.stringify(savedLeadData)
+      );
+
+      setSavedLead(savedLeadData);
+      setFormData({
+        name: savedLeadData.name,
+        email: savedLeadData.email,
+        phone: savedLeadData.phone,
+      });
+
+      const botReply = buildBotReply(contactData);
 
       setMessages((prev) => [
         ...prev,
@@ -1080,6 +1162,8 @@ Question: ${askQuestion}`;
     formData,
     isSubmittingLead,
     showAskStart,
+    savedLead,
+    isLeadLocked: savedLead?.submitted === true,
   };
 
   const flowVisibility = {
