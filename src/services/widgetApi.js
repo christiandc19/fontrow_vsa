@@ -26,17 +26,23 @@ export async function createLead(payload) {
   return response.json();
 }
 
-export async function getUserByIP() {
+export async function getUserByIP(referrer) {
   try {
     // Get user's IP address
     const ipResponse = await fetch('https://api.ipify.org?format=json');
     const ipData = await ipResponse.json();
     const userIP = ipData.ip;
+    const query = referrer
+      ? `?referrer=${encodeURIComponent(referrer)}`
+      : "";
 
-    const response = await fetch(`${API_BASE}/api/Leads/by-ip/${userIP}`, {
-      method: "GET",
-      headers: authHeaders,
-    });
+    const response = await fetch(
+      `${API_BASE}/api/Leads/by-ip/${userIP}${query}`,
+      {
+        method: "GET",
+        headers: authHeaders,
+      },
+    );
 
     if (!response.ok) {
       if (response.status === 404) return null;

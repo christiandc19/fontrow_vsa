@@ -412,7 +412,8 @@ useEffect(() => {
 
   const checkUserByIP = async (updateFormData = true) => {
     try {
-      const userData = await getUserByIP();
+      const referrer = window.location.origin + window.location.pathname;
+      const userData = await getUserByIP(referrer);
       const user = Array.isArray(userData) ? userData[0] : userData;
 
       if (!user) return null;
@@ -501,6 +502,7 @@ useEffect(() => {
   };
 
   const openChat = async () => {
+    console.log("Chat opened with config:");
     setIsOpen(true);
     setMessages([]);
     // Start each new chat with the collapsed menu again.
